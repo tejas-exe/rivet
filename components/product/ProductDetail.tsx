@@ -101,7 +101,7 @@ export function SizeGuideTable({ product }: { product: Product }) {
   return (
     <div>
       <div className="overflow-x-auto">
-        <table className="w-full min-w-[420px] border-collapse font-mono text-sm">
+        <table className="w-full border-collapse font-mono text-xs sm:text-sm">
           <thead>
             <tr>
               {g.headers.map((h) => (
@@ -350,7 +350,7 @@ export function ProductDetail({ product, initialColor }: { product: Product; ini
               <Button size="lg" onClick={add} block>
                 Add to cart — {formatINR(product.basePrice * qty)}
               </Button>
-              <div className="grid grid-cols-2 gap-2">
+              <div className="grid gap-2 sm:grid-cols-2">
                 <Button size="lg" variant="ghost" onClick={customize} iconLeft={<Wand2 size={15} />}>
                   Customize this
                 </Button>
@@ -400,7 +400,7 @@ export function ProductDetail({ product, initialColor }: { product: Product; ini
 
       <section className="mt-24 border-t border-line py-20">
         <Container className="grid gap-12 lg:grid-cols-2">
-          <div>
+          <div className="min-w-0">
             <SectionHeader eyebrow="Product description" title="The details" />
             <p className="mt-8 max-w-xl leading-relaxed text-bone-dim">{product.description}</p>
             <dl className="mt-8 grid max-w-xl grid-cols-2 gap-px bg-line">
@@ -417,7 +417,7 @@ export function ProductDetail({ product, initialColor }: { product: Product; ini
               ))}
             </dl>
           </div>
-          <div id="size-guide">
+          <div id="size-guide" className="min-w-0">
             <SectionHeader eyebrow="Measurements" title="Size guide" />
             <div className="mt-8">
               <SizeGuideTable product={product} />
@@ -443,6 +443,9 @@ export function ProductDetail({ product, initialColor }: { product: Product; ini
           </div>
         </Container>
       </section>
+
+      {/* Spacer so the sticky buy bar never covers the footer on small screens */}
+      <div className="h-20 lg:hidden" aria-hidden />
 
       {/* Mobile sticky buy bar */}
       <div className="fixed inset-x-0 bottom-0 z-40 flex items-center gap-3 border-t border-line bg-ink/95 p-3 backdrop-blur lg:hidden">

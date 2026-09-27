@@ -211,7 +211,7 @@ export function GarmentViewer({ className }: { className?: string }) {
           </motion.p>
         </AnimatePresence>
       </div>
-      <div className="label pointer-events-none absolute top-4 left-4 hidden items-center gap-2 text-fog md:flex">
+      <div className="label pointer-events-none absolute top-4 left-4 hidden items-center gap-2 text-fog xl:flex">
         <span className="h-1.5 w-1.5 animate-pulse bg-volt" /> {COLORS[color].name} · {product.buildName}
       </div>
 

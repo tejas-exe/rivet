@@ -191,12 +191,12 @@ export function CheckoutView() {
   return (
     <Container className="pt-28 md:pt-36">
       <div className="mb-8 flex flex-wrap items-end justify-between gap-4">
-        <h1 className="display text-[clamp(3rem,8vw,6.5rem)]">Checkout</h1>
+        <h1 className="display text-[clamp(2.5rem,8vw,6.5rem)]">Checkout</h1>
         <p className="label flex items-center gap-2 text-fog"><Lock size={12} /> Demo — no real payment is processed</p>
       </div>
 
       <form onSubmit={placeOrder} className="grid gap-12 lg:grid-cols-[1fr_420px]" noValidate data-checkout-form>
-        <div>
+        <div className="min-w-0">
           <Section n="01" title="Contact">
             <div className="grid gap-4 sm:grid-cols-2">
               <Field label="Email" type="email" autoComplete="email" value={form.email} onChange={set("email")} error={errors.email} placeholder="you@email.com" />
@@ -284,7 +284,7 @@ export function CheckoutView() {
           </Section>
         </div>
 
-        <aside className="lg:sticky lg:top-28 lg:self-start">
+        <aside className="min-w-0 lg:sticky lg:top-28 lg:self-start">
           <div className="border border-line bg-coal">
             <p className="label border-b border-line px-6 py-4 text-bone">Order summary</p>
             <div className="max-h-[360px] divide-y divide-line overflow-y-auto px-6">

@@ -60,7 +60,7 @@ function CategoryTile({ category, index }: { category: Category; index: number }
             <p className="label mb-3 text-bone-dim">
               {formatINR(from)} base · black &amp; white
             </p>
-            <p className="display text-5xl md:text-7xl">{meta.plural}</p>
+            <p className="display text-[clamp(2.4rem,10vw,4.5rem)] whitespace-nowrap">{meta.plural}</p>
           </div>
           <span className="grid h-14 w-14 shrink-0 place-items-center border border-line-strong transition-colors duration-300 group-hover:border-volt group-hover:bg-volt group-hover:text-ink">
             <ArrowUpRight size={22} />
@@ -219,13 +219,13 @@ export function WhyCustomize() {
   return (
     <section className="bg-bone py-24 text-ink md:py-32">
       <Container>
-        <div className="grid gap-12 lg:grid-cols-[1fr_1.4fr]">
+        <div className="grid gap-12 xl:grid-cols-[1fr_1.4fr]">
           <div>
             <p className="label mb-4 flex items-center gap-3 text-ink/60">
               <span className="font-bold text-ink">04</span>
               <span className="h-px w-8 bg-ink/30" /> Why build
             </p>
-            <h2 className="display text-[clamp(2.8rem,7vw,6.5rem)]">
+            <h2 className="display text-[clamp(2.2rem,9vw,6.5rem)] xl:text-[min(4.5vw,4.6rem)]">
               Why
               <br />
               customize?
@@ -265,10 +265,10 @@ export function BuildCTA() {
           <span className="text-volt">your own</span>
         </motion.h2>
         <div className="mt-12 flex flex-col items-center justify-center gap-3 sm:flex-row">
-          <ButtonLink href="/customize" size="xl" icon={<ArrowRight size={16} />}>
+          <ButtonLink href="/customize" size="xl" className="w-full sm:w-auto" icon={<ArrowRight size={16} />}>
             Start customizing
           </ButtonLink>
-          <ButtonLink href="/customize/essential-hoodie" size="xl" variant="ghost">
+          <ButtonLink href="/customize/essential-hoodie" size="xl" variant="ghost" className="w-full sm:w-auto">
             Build a hoodie
           </ButtonLink>
         </div>

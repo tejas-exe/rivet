@@ -28,7 +28,7 @@ export default function AboutPage() {
         <Container className="grid items-center gap-16 lg:grid-cols-2">
           <div className="relative aspect-square bg-char">
             <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_50%_20%,rgba(255,255,255,0.12),transparent_60%)]" />
-            <GarmentImage silhouette="hoodie" color="black" className="absolute inset-[8%]" />
+            <GarmentImage silhouette="hoodie" color="black" className="absolute inset-[8%] h-[84%] w-[84%]" />
           </div>
           <div>
             <SectionHeader index="01" eyebrow="How we make it" title={<>Blanks worth<br />building on</>} />

@@ -162,7 +162,7 @@ export function BuildSelect() {
       </div>
 
       {/* Garment */}
-      <div className="absolute inset-x-0 top-[27%] bottom-[20%] z-0 flex items-center justify-center md:top-[24%] md:bottom-[12%]" style={{ perspective: 1600 }}>
+      <div className="absolute inset-x-0 top-[26%] bottom-[34%] z-0 flex items-center justify-center lg:top-[24%] lg:bottom-[12%]" style={{ perspective: 1600 }}>
         <AnimatePresence mode="wait">
           <motion.div
             key={product.slug}
@@ -178,15 +178,15 @@ export function BuildSelect() {
       </div>
 
       {/* Left: name + stats */}
-      <div className="absolute bottom-[23%] left-4 z-10 w-[min(360px,55vw)] md:top-1/2 md:bottom-auto md:left-8 md:-translate-y-1/2">
+      <div className="absolute bottom-[17%] left-4 z-10 w-[min(360px,55vw)] md:left-8 lg:top-1/2 lg:bottom-auto lg:-translate-y-1/2">
         <AnimatePresence mode="wait">
           <motion.div key={product.slug} initial={{ opacity: 0, x: -30 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: -30 }} transition={{ duration: 0.4 }}>
             <p className="label text-fog">
               Model {String(index + 1).padStart(2, "0")} / {String(list.length).padStart(2, "0")}
             </p>
             <p className="display mt-2 text-[clamp(1.6rem,3.4vw,3rem)]">{product.name}</p>
-            <p className="mt-2 hidden max-w-xs text-sm text-mute md:block">{product.tagline}</p>
-            <div className="mt-6 hidden space-y-3 md:block">
+            <p className="mt-2 hidden max-w-xs text-sm text-mute lg:block">{product.tagline}</p>
+            <div className="mt-6 hidden space-y-3 lg:block">
               {stats(product).map((s) => (
                 <div key={s.label}>
                   <div className="label mb-1.5 flex justify-between text-mute">
@@ -212,15 +212,15 @@ export function BuildSelect() {
       </div>
 
       {/* Right: price + colors */}
-      <div className="absolute right-4 bottom-[23%] z-10 text-right md:top-1/2 md:right-8 md:bottom-auto md:-translate-y-1/2">
+      <div className="absolute right-4 bottom-[17%] z-10 text-right md:right-8 lg:top-1/2 lg:bottom-auto lg:-translate-y-1/2">
         <p className="label text-fog">Base price</p>
         <AnimatePresence mode="wait">
-          <motion.p key={product.basePrice} initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -10 }} className="font-wide text-4xl font-black text-volt md:text-6xl">
+          <motion.p key={product.basePrice} initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -10 }} className="font-wide text-3xl font-black text-volt sm:text-4xl lg:text-6xl">
             {formatINR(product.basePrice)}
           </motion.p>
         </AnimatePresence>
-        <p className="label mt-6 mb-3 text-fog">Available colors</p>
-        <div className="flex flex-col items-end gap-2">
+        <p className="label mt-3 mb-2 text-fog lg:mt-6 lg:mb-3">Available colors</p>
+        <div className="flex flex-row justify-end gap-3 lg:flex-col lg:items-end lg:gap-2">
           {COLOR_ORDER.map((c, i) => {
             const available = product.colors.includes(c);
             const active = c === activeColor;
@@ -235,8 +235,8 @@ export function BuildSelect() {
                 onMouseEnter={() => available && sound.play("hover")}
                 className={cn("group flex items-center gap-3 disabled:opacity-25", active ? "text-bone" : "text-mute hover:text-bone")}
               >
-                <span className="label hidden sm:inline">{COLORS[c].name}</span>
-                <span className="label hidden text-fog md:inline">[{i + 1}]</span>
+                <span className="label hidden lg:inline">{COLORS[c].name}</span>
+                <span className="label hidden text-fog lg:inline">[{i + 1}]</span>
                 <span className={cn("h-6 w-6 rounded-full ring-2 ring-offset-2 ring-offset-ink transition-all", active ? "scale-110 ring-volt" : "ring-transparent group-hover:ring-line-strong")} style={{ background: COLORS[c].swatch }} />
               </button>
             );

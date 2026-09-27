@@ -36,15 +36,15 @@ export function ProfileView() {
   ];
   return (
     <div className="space-y-10">
-      <div className="grid grid-cols-2 gap-px bg-line md:grid-cols-3">
+      <div className="grid grid-cols-3 gap-px bg-line">
         {[
           ["Member since", formatDate(profile.memberSince)],
           ["Builds ordered", String(MOCK_ORDERS.length + useOrders.getState().orders.length)],
           ["Status", profile.tier],
         ].map(([k, v]) => (
-          <div key={k} className="bg-ink p-5">
-            <p className="label text-fog">{k}</p>
-            <p className="mt-2 font-wide text-lg font-bold">{v}</p>
+          <div key={k} className="bg-ink p-3 sm:p-5">
+            <p className="label text-[9px]! text-fog sm:text-[10.5px]!">{k}</p>
+            <p className="mt-2 font-wide text-sm font-bold sm:text-lg">{v}</p>
           </div>
         ))}
       </div>

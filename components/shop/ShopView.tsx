@@ -18,12 +18,6 @@ const SORTS: { id: SortId; label: string }[] = [
   { id: "newest", label: "Newest" },
 ];
 
-const PRICE_BUCKETS = [
-  { id: "u500", label: "Under ₹500", test: (p: number) => p < 500 },
-  { id: "500-900", label: "₹500 – ₹900", test: (p: number) => p >= 500 && p <= 900 },
-  { id: "900+", label: "Over ₹900", test: (p: number) => p > 900 },
-];
-
 function sortProducts(list: Product[], sort: SortId) {
   const out = [...list];
   if (sort === "price-asc") out.sort((a, b) => a.basePrice - b.basePrice);
@@ -57,10 +51,9 @@ function FilterGroup({ title, children }: { title: string; children: React.React
 interface Filters {
   colors: ColorId[];
   sizes: Size[];
-  prices: string[];
 }
 
-function FilterPanel({ category, filters, setFilters, counts }: { category?: Category; filters: Filters; setFilters: (f: Filters) => void; counts: Record<string, number> }) {
+function FilterPanel({ category, filters, setFilters }: { category?: Category; filters: Filters; setFilters: (f: Filters) => void }) {
   const cats: { href: string; label: string; active: boolean }[] = [
     { href: "/shop", label: "All", active: !category },
     { href: "/shop/t-shirts", label: "T-Shirts", active: category === "tshirt" },
@@ -115,28 +108,12 @@ function FilterPanel({ category, filters, setFilters, counts }: { category?: Cat
           })}
         </div>
       </FilterGroup>
-      <FilterGroup title="Price">
-        <div className="flex flex-col gap-3">
-          {PRICE_BUCKETS.map((b) => {
-            const on = filters.prices.includes(b.id);
-            return (
-              <button key={b.id} onClick={() => setFilters({ ...filters, prices: toggle(filters.prices, b.id) })} aria-pressed={on} className="flex items-center justify-between text-sm text-bone-dim hover:text-bone">
-                <span className="flex items-center gap-3">
-                  <span className={cn("grid h-4 w-4 place-items-center border", on ? "border-volt bg-volt text-ink" : "border-line-strong")}>{on && <Check size={11} strokeWidth={3} />}</span>
-                  {b.label}
-                </span>
-                <span className="font-mono text-xs text-fog">{counts[b.id] ?? 0}</span>
-              </button>
-            );
-          })}
-        </div>
-      </FilterGroup>
     </div>
   );
 }
 
 export function ShopView({ category }: { category?: Category }) {
-  const [filters, setFilters] = useState<Filters>({ colors: [], sizes: [], prices: [] });
+  const [filters, setFilters] = useState<Filters>({ colors: [], sizes: [] });
   const [sort, setSort] = useState<SortId>("featured");
   const [sortOpen, setSortOpen] = useState(false);
   const [drawer, setDrawer] = useState(false);
@@ -146,21 +123,18 @@ export function ShopView({ category }: { category?: Category }) {
     const list = base.filter(
       (p) =>
         (filters.colors.length === 0 || filters.colors.some((c) => p.colors.includes(c))) &&
-        (filters.sizes.length === 0 || filters.sizes.some((s) => p.sizes.includes(s))) &&
-        (filters.prices.length === 0 || PRICE_BUCKETS.filter((b) => filters.prices.includes(b.id)).some((b) => b.test(p.basePrice))),
+        (filters.sizes.length === 0 || filters.sizes.some((s) => p.sizes.includes(s))),
     );
     return sortProducts(list, sort);
   }, [base, filters, sort]);
 
-  const counts = useMemo(() => Object.fromEntries(PRICE_BUCKETS.map((b) => [b.id, base.filter((p) => b.test(p.basePrice)).length])), [base]);
-  const activeCount = filters.colors.length + filters.sizes.length + filters.prices.length;
-  const clear = () => setFilters({ colors: [], sizes: [], prices: [] });
+  const activeCount = filters.colors.length + filters.sizes.length;
+  const clear = () => setFilters({ colors: [], sizes: [] });
   const title = category ? CATEGORY_META[category].plural : "All products";
 
   const chips = [
     ...filters.colors.map((c) => ({ key: `c-${c}`, label: COLORS[c].name, remove: () => setFilters({ ...filters, colors: toggle(filters.colors, c) }) })),
     ...filters.sizes.map((s) => ({ key: `s-${s}`, label: `Size ${s}`, remove: () => setFilters({ ...filters, sizes: toggle(filters.sizes, s) }) })),
-    ...filters.prices.map((p) => ({ key: `p-${p}`, label: PRICE_BUCKETS.find((b) => b.id === p)!.label, remove: () => setFilters({ ...filters, prices: toggle(filters.prices, p) }) })),
   ];
 
   return (
@@ -239,7 +213,7 @@ export function ShopView({ category }: { category?: Category }) {
         <div className="grid gap-10 pt-8 lg:grid-cols-[240px_1fr]">
           <aside className="hidden lg:block">
             <div className="sticky top-36">
-              <FilterPanel category={category} filters={filters} setFilters={setFilters} counts={counts} />
+              <FilterPanel category={category} filters={filters} setFilters={setFilters} />
               {activeCount > 0 && (
                 <button onClick={clear} className="label mt-5 text-mute hover:text-volt">
                   Reset filters
@@ -288,7 +262,7 @@ export function ShopView({ category }: { category?: Category }) {
                   <X size={20} />
                 </button>
               </div>
-              <FilterPanel category={category} filters={filters} setFilters={setFilters} counts={counts} />
+              <FilterPanel category={category} filters={filters} setFilters={setFilters} />
               <div className="mt-6 grid grid-cols-2 gap-2">
                 <button onClick={clear} className="label h-12 border border-line-strong">
                   Clear
