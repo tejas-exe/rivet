@@ -33,7 +33,7 @@ function stats(p: Product) {
   const canvas = Object.values(z).reduce((s, x) => s + x.widthIn * x.heightIn, 0);
   return [
     { label: "Weight", value: (gsm - 150) / 320, readout: `${gsm} GSM` },
-    { label: "Print canvas", value: canvas / 450, readout: `${Math.round(canvas)} in²` },
+    { label: "Print canvas", value: Math.min(1, canvas / 3200), readout: `${Math.round(canvas)} in²` },
     { label: "Comfort", value: Math.min(1, p.rating / 5), readout: `${p.rating.toFixed(1)} / 5` },
     { label: "Base price", value: p.basePrice / 1300, readout: formatINR(p.basePrice) },
   ];
@@ -118,29 +118,40 @@ export function BuildSelect() {
 
   return (
     <div className="relative h-[100svh] overflow-hidden bg-ink">
-      <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_50%_30%,#1d1d1d,#0a0a0a_70%)]" />
+      <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_50%_30%,#171430,#06060c_72%)]" />
+      <div className="absolute inset-0 bg-[radial-gradient(ellipse_35%_60%_at_0%_55%,rgb(255_46_147/0.22),transparent_70%),radial-gradient(ellipse_35%_60%_at_100%_55%,rgb(34_234_255/0.18),transparent_70%)]" />
       <StudioEnvironment />
-      <div className="pointer-events-none absolute top-0 left-1/2 h-full w-[60vw] -translate-x-1/2 bg-[conic-gradient(from_180deg_at_50%_0%,transparent_165deg,rgba(255,250,235,0.08)_175deg,rgba(255,250,235,0.12)_180deg,rgba(255,250,235,0.08)_185deg,transparent_195deg)] blur-md" />
+      <div className="pointer-events-none absolute top-0 left-1/2 h-full w-[60vw] -translate-x-1/2 bg-[conic-gradient(from_180deg_at_50%_0%,transparent_165deg,rgb(244_238_255/0.08)_175deg,rgb(244_238_255/0.13)_180deg,rgb(244_238_255/0.08)_185deg,transparent_195deg)]" />
+      <div className="pointer-events-none absolute top-0 left-1/2 flex -translate-x-1/2 gap-[20vw]" aria-hidden>
+        <span className="h-[3px] w-[18vw] bg-volt/80 shadow-[0_0_20px_4px_rgb(255_46_147/0.45)]" />
+        <span className="h-[3px] w-[18vw] bg-cyan/80 shadow-[0_0_20px_4px_rgb(34_234_255/0.4)]" />
+      </div>
+      <p aria-hidden className="display text-outline pointer-events-none absolute inset-x-0 top-[30%] text-center text-[26vw] leading-none select-none">
+        Garage
+      </p>
+      <div className="scanlines pointer-events-none absolute inset-0 opacity-40" aria-hidden />
 
       {/* Top bar */}
       <div className="absolute inset-x-0 top-0 z-20 flex items-center justify-between px-4 py-4 md:px-8">
         <Link href="/" className="label flex items-center gap-2 text-mute hover:text-bone">
           <ArrowLeft size={14} /> Exit to store
         </Link>
-        <p className="label hidden text-fog md:block">RIVET Studio · Build select</p>
+        <p className="label hidden items-center gap-2 text-fog md:flex">
+          <span className="h-1.5 w-1.5 animate-pulse bg-cyan" /> RIVET Studio <span className="text-fog/60">///</span> Build select <span className="text-bone">/ 001</span>
+        </p>
       </div>
 
       {/* Title */}
       <div className="absolute inset-x-0 top-14 z-10 px-4 text-center md:top-16">
-        <motion.p initial={{ opacity: 0, letterSpacing: "0.6em" }} animate={{ opacity: 1, letterSpacing: "0.18em" }} transition={{ duration: 1.2 }} className="label text-volt">
+        <motion.p initial={{ opacity: 0, x: -30 }} animate={{ opacity: 1, x: 0 }} transition={{ duration: 0.4 }} className="label text-cyan">
           Step 01 / Select base
         </motion.p>
-        <h1 className="display mt-2 overflow-hidden text-[clamp(2rem,6vw,4.6rem)]">
-          <motion.span className="block" initial={{ y: "100%" }} animate={{ y: 0 }} transition={{ delay: 0.2, duration: 0.8, ease: [0.22, 1, 0.36, 1] }}>
-            Choose your build
+        <h1 className="display mt-2 overflow-hidden pr-[0.1em] text-[clamp(2.6rem,7vw,5.6rem)]">
+          <motion.span className="block" initial={{ y: "100%" }} animate={{ y: 0 }} transition={{ delay: 0.1, duration: 0.45, ease: [0.22, 1, 0.36, 1] }}>
+            Choose your <span className="text-volt neon-text">build</span>
           </motion.span>
         </h1>
-        <div className="mt-5 inline-flex border border-line-strong bg-ink/60 backdrop-blur" role="tablist">
+        <div className="clip-angle mt-5 inline-flex bg-ink/70 backdrop-blur" role="tablist">
           {CLASSES.map((c) => {
             const base = getProductsByCategory(c.id).find((p) => p.slug === DEFAULT_BUILD[c.id])!.basePrice;
             return (
@@ -153,7 +164,7 @@ export function BuildSelect() {
                 className={cn("relative px-5 py-2.5 text-left transition-colors md:px-8", category === c.id ? "text-ink" : "text-bone-dim hover:text-bone")}
               >
                 {category === c.id && <motion.span layoutId="class-pill" className="absolute inset-0 bg-volt" transition={{ type: "spring", stiffness: 400, damping: 34 }} />}
-                <span className="relative block font-wide text-sm font-black uppercase md:text-base">{c.label}</span>
+                <span className="relative block font-wide text-sm font-extrabold uppercase italic md:text-base">{c.label}</span>
                 <span className="label relative block text-[9.5px]! opacity-70">{formatINR(base)} base</span>
               </button>
             );
@@ -182,9 +193,9 @@ export function BuildSelect() {
         <AnimatePresence mode="wait">
           <motion.div key={product.slug} initial={{ opacity: 0, x: -30 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: -30 }} transition={{ duration: 0.4 }}>
             <p className="label text-fog">
-              Model {String(index + 1).padStart(2, "0")} / {String(list.length).padStart(2, "0")}
+              <span className="text-volt">Model {String(index + 1).padStart(2, "0")}</span> / {String(list.length).padStart(2, "0")}
             </p>
-            <p className="display mt-2 text-[clamp(1.6rem,3.4vw,3rem)]">{product.name}</p>
+            <p className="display mt-2 text-[clamp(2.2rem,4.4vw,4rem)]">{product.name}</p>
             <p className="mt-2 hidden max-w-xs text-sm text-mute lg:block">{product.tagline}</p>
             <div className="mt-6 hidden space-y-3 lg:block">
               {stats(product).map((s) => (
@@ -197,9 +208,9 @@ export function BuildSelect() {
                     {Array.from({ length: 20 }).map((_, i) => (
                       <motion.span
                         key={i}
-                        className="h-2 flex-1"
-                        initial={{ backgroundColor: "#232323" }}
-                        animate={{ backgroundColor: i / 20 < Math.min(1, s.value) ? "#c8ff2e" : "#232323" }}
+                        className="h-2 flex-1 -skew-x-[20deg]"
+                        initial={{ backgroundColor: "#1b1b2d" }}
+                        animate={{ backgroundColor: i / 20 < Math.min(1, s.value) ? (i > 14 ? "#22eaff" : "#ff2e93") : "#1b1b2d" }}
                         transition={{ delay: i * 0.015 }}
                       />
                     ))}
@@ -215,11 +226,11 @@ export function BuildSelect() {
       <div className="absolute right-4 bottom-[17%] z-10 text-right md:right-8 lg:top-1/2 lg:bottom-auto lg:-translate-y-1/2">
         <p className="label text-fog">Base price</p>
         <AnimatePresence mode="wait">
-          <motion.p key={product.basePrice} initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -10 }} className="font-wide text-3xl font-black text-volt sm:text-4xl lg:text-6xl">
+          <motion.p key={product.basePrice} initial={{ opacity: 0, x: 20 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: -20 }} transition={{ duration: 0.2 }} className="display neon-text text-5xl text-volt sm:text-6xl lg:text-8xl">
             {formatINR(product.basePrice)}
           </motion.p>
         </AnimatePresence>
-        <p className="label mt-3 mb-2 text-fog lg:mt-6 lg:mb-3">Available colors</p>
+        <p className="label mt-3 mb-2 text-fog lg:mt-6 lg:mb-3">Paint / {String(COLOR_ORDER.indexOf(activeColor) + 1).padStart(2, "0")}</p>
         <div className="flex flex-row justify-end gap-3 lg:flex-col lg:items-end lg:gap-2">
           {COLOR_ORDER.map((c, i) => {
             const available = product.colors.includes(c);
@@ -237,7 +248,7 @@ export function BuildSelect() {
               >
                 <span className="label hidden lg:inline">{COLORS[c].name}</span>
                 <span className="label hidden text-fog lg:inline">[{i + 1}]</span>
-                <span className={cn("h-6 w-6 rounded-full ring-2 ring-offset-2 ring-offset-ink transition-all", active ? "scale-110 ring-volt" : "ring-transparent group-hover:ring-line-strong")} style={{ background: COLORS[c].swatch }} />
+                <span className={cn("h-7 w-11 -skew-x-12 ring-2 ring-offset-2 ring-offset-ink transition-all duration-150 group-hover:scale-110", active ? "scale-110 ring-volt shadow-[0_0_14px_rgb(255_46_147/0.6)]" : "ring-transparent group-hover:ring-line-strong")} style={{ background: COLORS[c].swatch }} />
               </button>
             );
           })}
@@ -247,20 +258,20 @@ export function BuildSelect() {
       {/* Bottom controls */}
       <div className="absolute inset-x-0 bottom-0 z-20 flex flex-col items-center gap-3 px-4 pb-6 md:pb-8">
         <div className="flex w-full max-w-lg items-center justify-between gap-3">
-          <button onClick={() => cycle(-1)} aria-label="Previous model" className="grid h-14 w-14 place-items-center border border-line-strong bg-ink/60 backdrop-blur hover:border-volt hover:text-volt">
+          <button onClick={() => cycle(-1)} aria-label="Previous model" className="clip-angle grid h-14 w-14 place-items-center bg-steel/70 backdrop-blur transition-colors hover:bg-cyan hover:text-ink">
             <ChevronLeft size={22} />
           </button>
           <button
             onClick={launch}
             onMouseEnter={() => sound.play("hover")}
-            className="clip-notch group relative h-14 flex-1 overflow-hidden bg-volt font-wide text-sm font-black tracking-[0.2em] text-ink uppercase md:text-base"
+            className="clip-angle group relative h-14 flex-1 overflow-hidden bg-volt font-wide text-sm font-extrabold tracking-[0.2em] text-ink uppercase italic transition-[filter] hover:drop-shadow-[0_0_16px_rgb(255_46_147/0.6)] md:text-base"
           >
-            <span className="absolute inset-0 -translate-x-full bg-bone transition-transform duration-500 group-hover:translate-x-0" />
-            <span className="relative flex items-center justify-center gap-3">
+            <span className="absolute inset-y-0 -left-[15%] w-[130%] -translate-x-[110%] -skew-x-[24deg] bg-bone transition-transform duration-300 ease-[cubic-bezier(0.7,0,0.2,1)] group-hover:translate-x-0" />
+            <span className="relative flex items-center justify-center gap-3 transition-transform duration-200 group-hover:translate-x-1">
               Customize <CornerDownLeft size={16} />
             </span>
           </button>
-          <button onClick={() => cycle(1)} aria-label="Next model" className="grid h-14 w-14 place-items-center border border-line-strong bg-ink/60 backdrop-blur hover:border-volt hover:text-volt">
+          <button onClick={() => cycle(1)} aria-label="Next model" className="clip-angle grid h-14 w-14 place-items-center bg-steel/70 backdrop-blur transition-colors hover:bg-cyan hover:text-ink">
             <ChevronRight size={22} />
           </button>
         </div>
@@ -276,7 +287,7 @@ export function BuildSelect() {
       <AnimatePresence>
         {launching && (
           <motion.div className="absolute inset-0 z-50 bg-ink" initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ delay: 0.45, duration: 0.45 }}>
-            <motion.div className="absolute top-1/2 left-0 h-px w-full bg-volt" initial={{ scaleX: 0 }} animate={{ scaleX: 1 }} transition={{ duration: 0.5 }} />
+            <motion.div className="absolute top-1/2 left-0 h-[2px] w-full bg-gradient-to-r from-volt via-violet to-cyan shadow-[0_0_16px_rgb(255_46_147/0.8)]" initial={{ scaleX: 0 }} animate={{ scaleX: 1 }} transition={{ duration: 0.4 }} />
           </motion.div>
         )}
       </AnimatePresence>

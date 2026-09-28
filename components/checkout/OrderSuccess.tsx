@@ -26,8 +26,8 @@ export function OrderSuccess() {
     );
 
   return (
-    <div className="relative overflow-hidden">
-      <div className="absolute inset-x-0 top-0 -z-10 h-[80vh] bg-[radial-gradient(ellipse_at_50%_0%,rgba(200,255,46,0.14),transparent_60%)]" />
+    <div className="relative isolate overflow-hidden">
+      <div className="absolute inset-x-0 top-0 -z-10 h-[80vh] bg-[radial-gradient(ellipse_at_50%_0%,rgba(255,46,147,0.16),transparent_60%)]" />
       <Container className="pt-36 pb-10 text-center md:pt-44">
         <motion.div initial={{ scale: 0, rotate: -45 }} animate={{ scale: 1, rotate: 45 }} transition={{ type: "spring", stiffness: 200, damping: 14 }} className="mx-auto mb-10 grid h-16 w-16 place-items-center border-2 border-volt">
           <span className="h-3 w-3 bg-volt" />

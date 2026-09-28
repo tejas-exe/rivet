@@ -67,8 +67,8 @@ function Field({
       <input
         {...props}
         className={cn(
-          "h-12 w-full border bg-ink px-3.5 text-sm transition-colors placeholder:text-fog focus:outline-none",
-          error ? "border-alert/70" : "border-line-strong focus:border-volt",
+          "h-12 w-full border bg-coal/70 px-3.5 text-[15px] text-bone transition-[border-color,box-shadow] placeholder:text-fog focus:outline-none",
+          error ? "border-alert/70" : "border-line-strong focus:border-cyan focus:shadow-[0_0_0_3px_rgb(34_234_255/0.12)]",
         )}
       />
     </label>
@@ -77,13 +77,40 @@ function Field({
 
 function Section({ n, title, children }: { n: string; title: string; children: React.ReactNode }) {
   return (
-    <section className="border-t border-line py-8">
-      <div className="mb-6 flex items-center gap-4">
-        <span className="font-mono text-xs text-volt">{n}</span>
-        <h2 className="font-wide text-lg font-black uppercase tracking-tight">{title}</h2>
+    <section className="relative border-t border-line py-8">
+      <span className="absolute top-0 left-0 h-[2px] w-16 bg-volt" />
+      <div className="mb-6 flex items-end gap-4">
+        <span className="display text-outline-bone text-5xl leading-none">{n}</span>
+        <h2 className="display text-4xl leading-none">{title}</h2>
       </div>
       {children}
     </section>
+  );
+}
+
+/** Racing-style progress track across the four checkout stages. */
+function Progress({ done }: { done: boolean[] }) {
+  const labels = ["Contact", "Delivery", "Shipping", "Payment"];
+  const current = done.findIndex((d) => !d);
+  return (
+    <ol className="grid grid-cols-4 gap-1.5" aria-label="Checkout progress">
+      {labels.map((l, i) => {
+        const complete = done[i];
+        const active = i === current;
+        return (
+          <li key={l}>
+            <div className="h-1 -skew-x-[30deg] overflow-hidden bg-steel">
+              <div
+                className={cn("h-full transition-[width] duration-300", complete ? "w-full bg-cyan shadow-[0_0_8px_rgb(34_234_255/0.8)]" : active ? "w-1/2 bg-volt" : "w-0")}
+              />
+            </div>
+            <p className={cn("label mt-2 text-[9px]!", complete ? "text-cyan" : active ? "text-bone" : "text-fog")}>
+              0{i + 1} <span className="hidden sm:inline">{l}</span>
+            </p>
+          </li>
+        );
+      })}
+    </ol>
   );
 }
 
@@ -93,10 +120,13 @@ function OptionCard({ active, onClick, children }: { active: boolean; onClick: (
       type="button"
       onClick={onClick}
       aria-pressed={active}
-      className={cn("relative flex w-full items-center gap-4 border p-4 text-left transition-colors", active ? "border-volt bg-volt/[0.04]" : "border-line-strong hover:border-bone")}
+      className={cn(
+        "relative flex w-full items-center gap-4 border border-l-[3px] p-4 text-left transition-colors",
+        active ? "border-line-strong border-l-volt bg-volt/[0.06]" : "border-line border-l-line-strong hover:border-l-bone",
+      )}
     >
-      <span className={cn("grid h-4 w-4 shrink-0 place-items-center rounded-full border", active ? "border-volt" : "border-line-strong")}>
-        {active && <span className="h-2 w-2 rounded-full bg-volt" />}
+      <span className={cn("grid h-4 w-4 shrink-0 rotate-45 place-items-center border", active ? "border-volt" : "border-line-strong")}>
+        {active && <span className="h-2 w-2 bg-volt" />}
       </span>
       {children}
     </button>
@@ -147,6 +177,16 @@ export function CheckoutView() {
   const codFee = payment === "cod" ? COD_FEE : 0;
   const total = subtotal + shipping + codFee;
 
+  // Display-only: which stages already pass validation (drives the progress track).
+  const liveErrors = validate(form, payment);
+  const has = (...keys: (keyof FormState)[]) => keys.some((k) => liveErrors[k]);
+  const stagesDone = [
+    !has("email", "phone"),
+    !has("fullName", "line1", "city", "state", "pin"),
+    !has("email", "phone", "fullName", "line1", "city", "state", "pin"),
+    !has("email", "phone", "fullName", "line1", "city", "state", "pin", "upi", "cardNumber", "cardExpiry", "cardCvc", "cardName"),
+  ];
+
   const placeOrder = async (e: React.FormEvent) => {
     e.preventDefault();
     const errs = validate(form, payment);
@@ -191,8 +231,19 @@ export function CheckoutView() {
   return (
     <Container className="pt-28 md:pt-36">
       <div className="mb-8 flex flex-wrap items-end justify-between gap-4">
-        <h1 className="display text-[clamp(2.5rem,8vw,6.5rem)]">Checkout</h1>
+        <div>
+          <p className="label mb-3 flex items-center gap-2 text-mute">
+            <span className="h-1.5 w-1.5 bg-volt shadow-[0_0_8px_rgb(255_46_147/0.9)]" /> Final lap
+          </p>
+          <h1 className="display text-[clamp(3.4rem,10vw,8rem)]">
+            Check<span className="text-outline-bone not-italic">out</span>
+            <span className="text-volt">.</span>
+          </h1>
+        </div>
         <p className="label flex items-center gap-2 text-fog"><Lock size={12} /> Demo — no real payment is processed</p>
+      </div>
+      <div className="mb-6 max-w-3xl">
+        <Progress done={stagesDone} />
       </div>
 
       <form onSubmit={placeOrder} className="grid gap-12 lg:grid-cols-[1fr_420px]" noValidate data-checkout-form>
@@ -211,7 +262,7 @@ export function CheckoutView() {
               <Field label="City" autoComplete="address-level2" value={form.city} onChange={set("city")} error={errors.city} />
               <label className="block">
                 <span className={cn("label mb-2 block", errors.state ? "text-alert" : "text-mute")}>{errors.state ? `State — ${errors.state}` : "State"}</span>
-                <select value={form.state} onChange={set("state")} className={cn("h-12 w-full border bg-ink px-3 text-sm focus:outline-none", errors.state ? "border-alert/70" : "border-line-strong focus:border-volt")}>
+                <select value={form.state} onChange={set("state")} className={cn("h-12 w-full border bg-coal/70 px-3 text-[15px] text-bone focus:outline-none", errors.state ? "border-alert/70" : "border-line-strong focus:border-cyan")}>
                   <option value="">Select state</option>
                   {INDIAN_STATES.map((s) => <option key={s}>{s}</option>)}
                 </select>
@@ -224,14 +275,14 @@ export function CheckoutView() {
             <div className="grid gap-2">
               <OptionCard active={shippingMethod === "standard"} onClick={() => setShipping("standard")}>
                 <div className="flex-1">
-                  <p className="font-wide text-sm font-bold uppercase">Standard delivery</p>
+                  <p className="font-wide text-base font-extrabold uppercase italic">Standard delivery</p>
                   <p className="text-xs text-mute">5–7 business days</p>
                 </div>
-                <span className="font-mono text-sm">{shippingFor(subtotal, "standard") === 0 ? <span className="text-volt">Free</span> : formatINR(SHIPPING_RATES.standard)}</span>
+                <span className="font-mono text-sm">{shippingFor(subtotal, "standard") === 0 ? <span className="text-cyan">Free</span> : formatINR(SHIPPING_RATES.standard)}</span>
               </OptionCard>
               <OptionCard active={shippingMethod === "express"} onClick={() => setShipping("express")}>
                 <div className="flex-1">
-                  <p className="font-wide text-sm font-bold uppercase">Express delivery</p>
+                  <p className="font-wide text-base font-extrabold uppercase italic">Express delivery</p>
                   <p className="text-xs text-mute">2–3 business days · priority print queue</p>
                 </div>
                 <span className="font-mono text-sm">{formatINR(SHIPPING_RATES.express)}</span>
@@ -251,7 +302,10 @@ export function CheckoutView() {
                   key={id}
                   onClick={() => setPayment(id)}
                   aria-pressed={payment === id}
-                  className={cn("flex flex-col items-center gap-2 border px-2 py-4 text-center transition-colors", payment === id ? "border-volt text-bone" : "border-line-strong text-bone-dim hover:border-bone")}
+                  className={cn(
+                    "flex flex-col items-center gap-2 border border-b-[3px] px-2 py-4 text-center transition-colors",
+                    payment === id ? "border-line-strong border-b-volt bg-volt/[0.06] text-bone" : "border-line border-b-line-strong text-bone-dim hover:border-b-bone",
+                  )}
                 >
                   <Icon size={20} className={payment === id ? "text-volt" : ""} />
                   <span className="label">{label}</span>
@@ -285,18 +339,22 @@ export function CheckoutView() {
         </div>
 
         <aside className="min-w-0 lg:sticky lg:top-28 lg:self-start">
-          <div className="border border-line bg-coal">
-            <p className="label border-b border-line px-6 py-4 text-bone">Order summary</p>
+          <div className="relative overflow-hidden bg-coal/85 backdrop-blur">
+            <span className="absolute inset-x-0 top-0 h-[2px] bg-gradient-to-r from-volt via-violet to-cyan" />
+            <div className="flex items-center justify-between border-b border-line px-6 py-4">
+              <p className="display text-3xl">Your builds</p>
+              <span className="label text-fog">{String(items.length).padStart(2, "0")} / Order sheet</span>
+            </div>
             <div className="max-h-[360px] divide-y divide-line overflow-y-auto px-6">
               {items.map((item) => (
                 <div key={item.id} className="flex gap-4 py-4">
                   <div className="relative">
                     <CartThumb item={item} className="h-20 w-16" />
-                    <span className="absolute -top-1.5 -right-1.5 grid h-5 w-5 place-items-center bg-bone font-mono text-[10px] font-bold text-ink">{item.quantity}</span>
+                    <span className="absolute -top-1.5 -right-1.5 grid h-5 w-5 place-items-center bg-volt font-mono text-[10px] font-bold text-ink">{item.quantity}</span>
                   </div>
                   <div className="min-w-0 flex-1">
                     <div className="flex justify-between gap-2">
-                      <p className="truncate text-xs font-bold uppercase">{item.custom ? `Custom ${item.name}` : item.name}</p>
+                      <p className="truncate font-wide text-sm font-extrabold uppercase italic">{item.custom ? `Custom ${item.name}` : item.name}</p>
                       <p className="font-mono text-xs">{formatINR(item.unitPrice * item.quantity)}</p>
                     </div>
                     <p className="label mt-1 text-fog">{COLORS[item.color].name} / {item.size}</p>
@@ -307,15 +365,18 @@ export function CheckoutView() {
             </div>
             <dl className="space-y-2.5 border-t border-line px-6 py-5 font-mono text-sm">
               <div className="flex justify-between"><dt className="text-mute">Subtotal</dt><dd>{formatINR(subtotal)}</dd></div>
-              <div className="flex justify-between"><dt className="text-mute">Shipping ({shippingMethod})</dt><dd>{shipping === 0 ? <span className="text-volt">Free</span> : formatINR(shipping)}</dd></div>
+              <div className="flex justify-between"><dt className="text-mute">Shipping ({shippingMethod})</dt><dd>{shipping === 0 ? <span className="text-cyan">Free</span> : formatINR(shipping)}</dd></div>
               {codFee > 0 && <div className="flex justify-between"><dt className="text-mute">COD fee</dt><dd>{formatINR(codFee)}</dd></div>}
             </dl>
-            <div className="flex items-baseline justify-between border-t border-line px-6 py-5">
-              <span className="label text-mute">Total</span>
-              <span className="font-wide text-3xl font-black">{formatINR(total)}</span>
+            <div className="flex items-end justify-between border-t border-line-strong px-6 py-5">
+              <span className="label pb-2 text-mute">Total</span>
+              <span className="flex items-start gap-1">
+                <span className="display mt-1 text-2xl text-volt">₹</span>
+                <span className="display text-7xl leading-[0.85] tabular-nums">{formatINR(total).slice(1)}</span>
+              </span>
             </div>
             <div className="px-6 pb-6">
-              <Button type="submit" size="lg" block disabled={placing} silent iconLeft={placing ? <Loader2 size={16} className="animate-spin" /> : <Check size={16} strokeWidth={3} />}>
+              <Button type="submit" size="xl" block disabled={placing} silent iconLeft={placing ? <Loader2 size={16} className="animate-spin" /> : <Check size={16} strokeWidth={3} />}>
                 {placing ? "Placing order…" : `Place order — ${formatINR(total)}`}
               </Button>
               <Link href="/cart" className="label mt-4 block text-center text-fog hover:text-bone">← Back to cart</Link>
@@ -328,10 +389,10 @@ export function CheckoutView() {
         {placing && (
           <motion.div className="fixed inset-0 z-[90] grid place-items-center bg-ink/90 backdrop-blur" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}>
             <div className="text-center">
-              <div className="mx-auto mb-8 h-[3px] w-64 overflow-hidden bg-steel">
-                <motion.div className="h-full bg-volt" initial={{ width: 0 }} animate={{ width: "100%" }} transition={{ duration: 1.7, ease: "easeInOut" }} />
+              <div className="mx-auto mb-8 h-1 w-72 -skew-x-[30deg] overflow-hidden bg-steel">
+                <motion.div className="h-full bg-gradient-to-r from-volt via-violet to-cyan shadow-[0_0_12px_rgb(255_46_147/0.8)]" initial={{ width: 0 }} animate={{ width: "100%" }} transition={{ duration: 1.7, ease: "easeInOut" }} />
               </div>
-              <p className="display text-4xl">Locking in your build</p>
+              <p className="display text-6xl">Locking in your build</p>
               <p className="label mt-3 text-mute">Confirming payment · Sending to print queue</p>
             </div>
           </motion.div>

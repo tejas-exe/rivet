@@ -3,7 +3,7 @@ import { AnimatePresence, motion } from "framer-motion";
 import { ArrowRight, Check, X } from "lucide-react";
 import { usePathname } from "next/navigation";
 import { useEffect } from "react";
-import { Button, ButtonLink } from "@/components/ui/Button";
+import { ButtonLink } from "@/components/ui/Button";
 import { COLORS } from "@/data/colors";
 import { formatINR } from "@/lib/format";
 import { FREE_SHIPPING_THRESHOLD } from "@/lib/pricing";
@@ -47,17 +47,19 @@ export function CartDrawer() {
             onClick={close}
           />
           <motion.aside
-            className="absolute top-0 right-0 flex h-full w-full max-w-[460px] flex-col border-l border-line bg-coal"
+            className="absolute top-0 right-0 flex h-full w-full max-w-[460px] flex-col border-l border-line-strong bg-coal"
             initial={{ x: "100%" }}
             animate={{ x: 0 }}
             exit={{ x: "100%" }}
-            transition={{ type: "spring", stiffness: 320, damping: 36 }}
+            transition={{ type: "spring", stiffness: 420, damping: 40 }}
           >
+            <span className="pointer-events-none absolute inset-y-0 left-0 w-[2px] bg-gradient-to-b from-volt via-violet to-cyan" />
             <header className="flex h-16 items-center justify-between border-b border-line px-5">
-              <p className="label text-bone">
-                Your Garage <span className="text-mute">({cartCount(items)})</span>
+              <p className="flex items-baseline gap-3">
+                <span className="display text-3xl">Your garage</span>
+                <span className="label text-volt">/ {String(cartCount(items)).padStart(2, "0")}</span>
               </p>
-              <button onClick={close} aria-label="Close cart" className="grid h-10 w-10 place-items-center hover:text-volt">
+              <button onClick={close} aria-label="Close cart" className="grid h-10 w-10 place-items-center transition-colors hover:text-cyan">
                 <X size={20} />
               </button>
             </header>
@@ -97,7 +99,7 @@ export function CartDrawer() {
             <div className="flex-1 overflow-y-auto px-5">
               {items.length === 0 ? (
                 <div className="flex h-full flex-col items-center justify-center text-center">
-                  <p className="display mb-3 text-3xl">Garage empty</p>
+                  <p className="display mb-3 text-5xl">Garage empty</p>
                   <p className="mb-8 max-w-[260px] text-sm text-mute">Nothing built yet. Start a custom piece or browse the collection.</p>
                   <div className="flex flex-col gap-3">
                     <ButtonLink href="/customize" icon={<ArrowRight size={14} />}>
@@ -110,8 +112,8 @@ export function CartDrawer() {
                 </div>
               ) : (
                 <div className="divide-y divide-line">
-                  {[...items].reverse().map((item) => (
-                    <CartLine key={item.id} item={item} compact />
+                  {[...items].reverse().map((item, i) => (
+                    <CartLine key={item.id} item={item} index={items.length - 1 - i} compact />
                   ))}
                 </div>
               )}
@@ -126,12 +128,12 @@ export function CartDrawer() {
                         <span className="text-bone">{formatINR(remaining)}</span> away from free shipping
                       </>
                     ) : (
-                      <span className="text-volt">Free standard shipping unlocked</span>
+                      <span className="text-cyan">Free standard shipping unlocked</span>
                     )}
                   </p>
-                  <div className="h-[3px] bg-steel">
+                  <div className="h-[3px] -skew-x-12 bg-steel">
                     <motion.div
-                      className="h-full bg-volt"
+                      className="h-full bg-gradient-to-r from-volt to-cyan shadow-[0_0_10px_rgb(255_46_147/0.6)]"
                       initial={false}
                       animate={{ width: `${Math.min(100, (subtotal / FREE_SHIPPING_THRESHOLD) * 100)}%` }}
                     />
@@ -139,7 +141,7 @@ export function CartDrawer() {
                 </div>
                 <div className="mb-4 flex items-baseline justify-between">
                   <span className="label text-mute">Subtotal</span>
-                  <span className="font-wide text-2xl font-black tabular-nums">{formatINR(subtotal)}</span>
+                  <span className="display text-5xl tabular-nums">{formatINR(subtotal)}</span>
                 </div>
                 <div className="grid grid-cols-2 gap-2">
                   <ButtonLink href="/cart" variant="ghost">
@@ -149,9 +151,9 @@ export function CartDrawer() {
                     Checkout
                   </ButtonLink>
                 </div>
-                <Button variant="dark" block className="mt-2 border-transparent bg-transparent text-mute hover:text-bone" onClick={close}>
-                  Continue shopping
-                </Button>
+                <button onClick={close} className="label mt-3 block w-full py-2 text-center text-mute transition-colors hover:text-bone">
+                  ← Continue shopping
+                </button>
               </footer>
             )}
           </motion.aside>

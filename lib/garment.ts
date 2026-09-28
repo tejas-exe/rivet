@@ -4,6 +4,8 @@
  * Every garment photo in /public/garments is a transparent 1000 × 1200 image
  * laid out on the same 500 × 600 unit canvas. Print zones are placed on that
  * canvas at 12.5 units per inch, so inches map 1:1 onto the photo.
+ * FRONT / BACK zones cover the whole garment face (all-over print); artwork
+ * is clipped to the garment silhouette so nothing prints off the fabric.
  * A future GLB/GLTF renderer only needs to honour the same `PrintZoneSpec`
  * inches + `CameraFocus` contract.
  */
@@ -55,8 +57,8 @@ const mirrorX = (x: number, w: number) => VIEWBOX.w - x - w;
 const tee: SilhouetteGeometry = {
   photo: "tee",
   zones: {
-    front: zone("front", "front", 12, 16, 175, 166),
-    back: zone("back", "back", 12, 16, 175, 132),
+    front: zone("front", "front", 37.5, 38, 15.5, 63),
+    back: zone("back", "back", 37.5, 38.5, 15.5, 59.5),
     // Wearer's left sleeve sits on the viewer's right in a front view.
     leftSleeve: zone("leftSleeve", "front", 3, 3, 410, 172),
     rightSleeve: zone("rightSleeve", "front", 3, 3, mirrorX(410, 37.5), 172),
@@ -68,8 +70,8 @@ const tee: SilhouetteGeometry = {
 const hoodie: SilhouetteGeometry = {
   photo: "hoodie",
   zones: {
-    front: zone("front", "front", 12, 10, 175, 212),
-    back: zone("back", "back", 12, 14, 175, 232),
+    front: zone("front", "front", 31, 42.5, 56.5, 34),
+    back: zone("back", "back", 30, 42.5, 62.5, 34.5),
     leftSleeve: zone("leftSleeve", "front", 2.5, 7, 378, 210),
     rightSleeve: zone("rightSleeve", "front", 2.5, 7, mirrorX(378, 31.25), 210),
   },

@@ -1,5 +1,5 @@
 "use client";
-import { useId, type CSSProperties } from "react";
+import { useId, type CSSProperties, type ReactNode } from "react";
 import { garmentPhoto, SILHOUETTES, UNITS_PER_INCH, VIEWBOX, ZONE_ORDER } from "@/lib/garment";
 import type { ColorId, Design, DesignsByZone, PrintZone, Silhouette } from "@/lib/types";
 import { cn } from "@/lib/utils";
@@ -25,6 +25,60 @@ export function designBoxStyle(d: Design, zoneW: number, zoneH: number): CSSProp
     height: `${(d.height / zoneH) * 100}%`,
     transform: `rotate(${d.rotation}deg)`,
   };
+}
+
+/**
+ * Clips its children (laid out in the zone's own box) to the garment
+ * silhouette, using the photo's alpha as a mask — prints stop at the seams.
+ */
+export function GarmentClip({ silhouette, color, zone, children }: { silhouette: Silhouette; color: ColorId; zone: PrintZone; children: ReactNode }) {
+  const z = SILHOUETTES[silhouette].zones[zone];
+  const zw = z.widthIn * UNITS_PER_INCH;
+  const zh = z.heightIn * UNITS_PER_INCH;
+  const mask = `url(${garmentPhoto(silhouette, color, z.face)})`;
+  return (
+    <div
+      className="pointer-events-none absolute"
+      style={{
+        left: `${(-z.x / zw) * 100}%`,
+        top: `${(-z.y / zh) * 100}%`,
+        width: `${(VIEWBOX.w / zw) * 100}%`,
+        height: `${(VIEWBOX.h / zh) * 100}%`,
+        maskImage: mask,
+        WebkitMaskImage: mask,
+        maskSize: "100% 100%",
+        WebkitMaskSize: "100% 100%",
+        maskRepeat: "no-repeat",
+        WebkitMaskRepeat: "no-repeat",
+      }}
+    >
+      <div className="absolute" style={zoneBoxStyle(silhouette, zone)}>
+        {children}
+      </div>
+    </div>
+  );
+}
+
+/** Printed artwork for one zone: images + fabric shading, clipped to the garment. */
+export function PrintLayer({ silhouette, color, zone, designs }: { silhouette: Silhouette; color: ColorId; zone: PrintZone; designs: Design[] }) {
+  if (!designs.length) return null;
+  const spec = SILHOUETTES[silhouette].zones[zone];
+  return (
+    <GarmentClip silhouette={silhouette} color={color} zone={zone}>
+      {designs.map((d) => (
+        // eslint-disable-next-line @next/next/no-img-element
+        <img
+          key={d.id}
+          src={d.src}
+          alt=""
+          draggable={false}
+          className="absolute max-w-none select-none object-fill"
+          style={designBoxStyle(d, spec.widthIn, spec.heightIn)}
+        />
+      ))}
+      <PrintShading silhouette={silhouette} color={color} zone={zone} designs={designs} />
+    </GarmentClip>
+  );
 }
 
 export const zonesOnFace = (silhouette: Silhouette, face: "front" | "back") =>
@@ -102,23 +156,11 @@ export function GarmentPreview({ silhouette, color, face = "front", designs, cla
       <GarmentImage silhouette={silhouette} color={color} view={face} rich={rich} className="absolute inset-0 h-full w-full" />
       {designs &&
         zonesOnFace(silhouette, face).map((zone) => {
-          const spec = SILHOUETTES[silhouette].zones[zone];
           const list = designs[zone] ?? [];
           if (!list.length) return null;
           return (
             <div key={zone} className="absolute" style={zoneBoxStyle(silhouette, zone)}>
-              {list.map((d) => (
-                // eslint-disable-next-line @next/next/no-img-element
-                <img
-                  key={d.id}
-                  src={d.src}
-                  alt=""
-                  draggable={false}
-                  className="absolute max-w-none select-none object-fill"
-                  style={designBoxStyle(d, spec.widthIn, spec.heightIn)}
-                />
-              ))}
-              <PrintShading silhouette={silhouette} color={color} zone={zone} designs={list} />
+              <PrintLayer silhouette={silhouette} color={color} zone={zone} designs={list} />
             </div>
           );
         })}

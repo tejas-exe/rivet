@@ -1,12 +1,12 @@
 "use client";
-import { AnimatePresence, animate, motion, useMotionValue, useMotionValueEvent, useTransform } from "framer-motion";
+import { AnimatePresence, animate, motion, useMotionValue, useMotionValueEvent, useTransform, type MotionValue } from "framer-motion";
 import { Minus, Move3d, Plus, RefreshCcw, Upload } from "lucide-react";
 import dynamic from "next/dynamic";
 import { useEffect, useRef, useState } from "react";
 import { zonesOnFace } from "@/components/garment/GarmentPreview";
 import { COLORS } from "@/data/colors";
 import { getProduct } from "@/data/products";
-import { cameraFor, ZONE_LABELS } from "@/lib/garment";
+import { cameraFor, ZONE_LABELS, ZONE_ORDER } from "@/lib/garment";
 import { sound } from "@/lib/sound";
 import type { PrintZone } from "@/lib/types";
 import { clamp, cn } from "@/lib/utils";
@@ -18,6 +18,16 @@ import { useArtworkUpload } from "./useArtworkUpload";
 
 const StudioEnvironment = dynamic(() => import("./StudioEnvironment"), { ssr: false });
 const CAMERA_SPRING = { type: "spring" as const, stiffness: 70, damping: 18, mass: 1 };
+
+/** Isolated so camera-angle ticks don't re-render the whole stage. */
+function CamReadout({ rotY }: { rotY: MotionValue<number> }) {
+  const [deg, setDeg] = useState(0);
+  useMotionValueEvent(rotY, "change", (v) => {
+    const d = ((Math.round(v / 5) * 5) % 360 + 360) % 360;
+    setDeg((prev) => (prev === d ? prev : d));
+  });
+  return <p>Cam / {String(deg).padStart(3, "0")}°</p>;
+}
 
 export function GarmentViewer({ className }: { className?: string }) {
   const productSlug = useCustomizer((s) => s.productSlug);
@@ -160,12 +170,23 @@ export function GarmentViewer({ className }: { className?: string }) {
         void upload.handleFiles(e.dataTransfer.files);
       }}
     >
-      {/* Garage backdrop */}
-      <div className="absolute inset-0 -z-20 bg-[radial-gradient(ellipse_at_50%_38%,#222_0%,#111_45%,#0a0a0a_80%)]" />
+      {/* Garage backdrop: navy void, neon side washes, overhead tubes, haze */}
+      <div className="absolute inset-0 -z-20 bg-[radial-gradient(ellipse_at_50%_38%,#171430_0%,#0b0a18_48%,#06060c_82%)]" />
+      <div className="absolute inset-0 -z-20 bg-[radial-gradient(ellipse_40%_70%_at_0%_60%,rgb(255_46_147/0.20),transparent_70%),radial-gradient(ellipse_40%_70%_at_100%_55%,rgb(34_234_255/0.16),transparent_70%)]" />
       <div className="absolute inset-0 -z-10">
         <StudioEnvironment />
       </div>
-      <div className="pointer-events-none absolute inset-x-0 top-0 -z-10 h-[70%] bg-[radial-gradient(ellipse_32%_75%_at_50%_0%,rgba(255,250,235,0.10),transparent_70%)]" />
+      <div className="pointer-events-none absolute inset-x-0 top-0 -z-10 h-[70%] bg-[radial-gradient(ellipse_32%_75%_at_50%_0%,rgb(244_238_255/0.12),transparent_70%)]" />
+      <div className="pointer-events-none absolute inset-x-0 bottom-0 -z-10 h-1/3 bg-[linear-gradient(to_top,rgb(139_92_255/0.10),transparent)]" />
+      {/* overhead neon tubes */}
+      <div className="pointer-events-none absolute top-0 left-1/2 -z-10 flex -translate-x-1/2 gap-[18cqw]" aria-hidden>
+        <span className="h-[3px] w-[16cqw] bg-volt/80 shadow-[0_0_18px_4px_rgb(255_46_147/0.45)]" />
+        <span className="h-[3px] w-[16cqw] bg-cyan/80 shadow-[0_0_18px_4px_rgb(34_234_255/0.4)]" />
+      </div>
+      {/* side edge strips */}
+      <span className="pointer-events-none absolute top-[18%] bottom-[18%] left-0 -z-10 w-[2px] bg-gradient-to-b from-transparent via-volt/70 to-transparent" aria-hidden />
+      <span className="pointer-events-none absolute top-[18%] right-0 bottom-[18%] -z-10 w-[2px] bg-gradient-to-b from-transparent via-cyan/70 to-transparent" aria-hidden />
+      <div className="scanlines pointer-events-none absolute inset-0 -z-10 opacity-40" aria-hidden />
 
       {/* Garment on its camera rig */}
       <div className="absolute inset-0 flex items-center justify-center" style={{ perspective: "1800px" }}>
@@ -196,45 +217,68 @@ export function GarmentViewer({ className }: { className?: string }) {
         </motion.div>
       </div>
 
-      {/* HUD: view indicator */}
-      <div className="pointer-events-none absolute top-3 left-1/2 -translate-x-1/2 text-center">
-        <p className="label text-fog">View</p>
+      {/* HUD: print zone / view indicator */}
+      <div className="pointer-events-none absolute top-3 left-1/2 -translate-x-1/2 text-center md:top-4">
+        <p className="label flex items-center justify-center gap-2 text-fog">
+          <span className="h-px w-5 bg-cyan/60" /> {editing ? "Print zone" : "View"} <span className="h-px w-5 bg-cyan/60" />
+        </p>
         <AnimatePresence mode="wait">
           <motion.p
-            key={`${facing}-${activeZone}`}
-            initial={{ opacity: 0, y: 6 }}
-            animate={{ opacity: 1, y: 0 }}
-            exit={{ opacity: 0, y: -6 }}
-            className="font-wide text-sm font-black tracking-wide text-bone uppercase"
+            key={`${facing}-${activeZone}-${editing}`}
+            initial={{ opacity: 0, x: 14 }}
+            animate={{ opacity: 1, x: 0 }}
+            exit={{ opacity: 0, x: -14 }}
+            transition={{ duration: 0.18 }}
+            className="display text-2xl whitespace-nowrap text-bone md:text-3xl"
           >
-            {activeZone === "leftSleeve" || activeZone === "rightSleeve" ? ZONE_LABELS[activeZone] : facing}
+            {editing || activeZone === "leftSleeve" || activeZone === "rightSleeve" ? ZONE_LABELS[activeZone] : facing}
+            {editing && <span className="ml-2 font-mono text-xs not-italic text-cyan">/ {String(ZONE_ORDER.indexOf(activeZone) + 1).padStart(2, "0")}</span>}
           </motion.p>
         </AnimatePresence>
       </div>
-      <div className="label pointer-events-none absolute top-4 left-4 hidden items-center gap-2 text-fog xl:flex">
-        <span className="h-1.5 w-1.5 animate-pulse bg-volt" /> {COLORS[color].name} · {product.buildName}
+      <div className="pointer-events-none absolute top-4 left-4 hidden md:block xl:left-5">
+        <p className="label flex items-center gap-2 text-bone">
+          <span className="h-1.5 w-1.5 animate-pulse bg-volt shadow-[0_0_8px_rgb(255_46_147/0.9)]" /> Custom studio
+        </p>
+        <p className="label mt-1 text-fog">Build / {product.id.replace("p-", "")}</p>
+        <div className="mt-3 border-l-2 border-volt pl-2.5">
+          <p className="label text-[9px]! text-fog">Garment</p>
+          <p className="display text-xl">{product.buildName}</p>
+          <p className="label mt-1 text-[9px]! text-fog">
+            Paint <span className="text-cyan">{COLORS[color].name}</span>
+          </p>
+        </div>
+      </div>
+      <div className="label pointer-events-none absolute top-4 right-4 hidden text-right text-[9px]! text-fog xl:block">
+        <CamReadout rotY={rotY} />
+        <p className="mt-1">Garage 02 — Bay 04</p>
       </div>
 
       {/* Camera controls */}
       <div className="absolute right-3 bottom-3 flex flex-col gap-1" onPointerDown={(e) => e.stopPropagation()}>
-        <button onClick={() => zoomBy(1.2)} aria-label="Zoom in" className="grid h-9 w-9 place-items-center border border-line bg-ink/70 text-bone-dim backdrop-blur hover:text-volt">
-          <Plus size={15} />
-        </button>
-        <button onClick={() => zoomBy(1 / 1.2)} aria-label="Zoom out" className="grid h-9 w-9 place-items-center border border-line bg-ink/70 text-bone-dim backdrop-blur hover:text-volt">
-          <Minus size={15} />
-        </button>
-        <button onClick={() => frame(useCustomizer.getState().activeZone)} aria-label="Reset camera" className="grid h-9 w-9 place-items-center border border-line bg-ink/70 text-bone-dim backdrop-blur hover:text-volt">
-          <RefreshCcw size={14} />
-        </button>
+        {[
+          { label: "Zoom in", onClick: () => zoomBy(1.2), icon: <Plus size={15} /> },
+          { label: "Zoom out", onClick: () => zoomBy(1 / 1.2), icon: <Minus size={15} /> },
+          { label: "Reset camera", onClick: () => frame(useCustomizer.getState().activeZone), icon: <RefreshCcw size={14} /> },
+        ].map((b) => (
+          <button
+            key={b.label}
+            onClick={b.onClick}
+            aria-label={b.label}
+            className="clip-angle-sm grid h-10 w-10 place-items-center bg-steel/70 text-bone-dim backdrop-blur transition-colors hover:bg-cyan hover:text-ink"
+          >
+            {b.icon}
+          </button>
+        ))}
       </div>
       <div className="label pointer-events-none absolute bottom-4 left-4 hidden items-center gap-2 text-fog md:flex">
-        <Move3d size={13} /> Drag to rotate · Scroll to zoom
+        <Move3d size={13} className="text-cyan" /> Drag to rotate <span className="opacity-60">///</span> Scroll to zoom
       </div>
 
       <AnimatePresence>
         {dropHover && (
-          <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} className="pointer-events-none absolute inset-3 grid place-items-center border-2 border-dashed border-volt bg-volt/10">
-            <p className="label flex items-center gap-2 text-volt">
+          <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} className="pointer-events-none absolute inset-3 grid place-items-center border-2 border-dashed border-cyan bg-cyan/10">
+            <p className="label flex items-center gap-2 text-cyan">
               <Upload size={14} /> Drop to place on {ZONE_LABELS[activeZone]}
             </p>
           </motion.div>

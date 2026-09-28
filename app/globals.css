@@ -1,30 +1,47 @@
 @import "tailwindcss";
 
-/* ───────────────────────── Design tokens ───────────────────────── */
+/* ═══════════════════════════════════════════════════════════════════
+   RIVET — "Night Garage" visual system
+   Underground street-racing atmosphere: deep navy blacks, neon pink /
+   cyan light, hand-drawn street marks. Token names are kept from the
+   original system (ink, volt, bone…) so every component re-themes.
+   ═══════════════════════════════════════════════════════════════════ */
 @theme {
-  --color-ink: #0a0a0a;
-  --color-coal: #111111;
-  --color-char: #181818;
-  --color-steel: #232323;
-  --color-line: rgb(255 255 255 / 0.09);
-  --color-line-strong: rgb(255 255 255 / 0.18);
-  --color-bone: #eeebe3;
-  --color-bone-dim: #d9d5ca;
-  --color-mute: #8b887f;
-  --color-fog: #5d5b56;
-  --color-volt: #c8ff2e;
-  --color-volt-dim: #9fcc1f;
+  /* Surfaces — never flat black; a cold navy undertone throughout. */
+  --color-ink: #06060c;
+  --color-coal: #0a0a14;
+  --color-char: #10101d;
+  --color-steel: #1b1b2d;
+  --color-line: rgb(170 180 255 / 0.09);
+  --color-line-strong: rgb(185 192 255 / 0.2);
+
+  /* Type */
+  --color-bone: #f3f1ff;
+  --color-bone-dim: #cdcbe4;
+  --color-mute: #8d8ba9;
+  --color-fog: #5c5b7c;
+
+  /* Neon. `volt` stays the primary accent name — it is now hot pink. */
+  --color-volt: #ff2e93;
+  --color-volt-dim: #c41f70;
+  --color-cyan: #22eaff;
+  --color-cyan-dim: #0fa9bd;
+  --color-violet: #8b5cff;
+  --color-acid: #d9ff3d;
   --color-alert: #ff5a36;
 
   --font-sans: var(--font-archivo), ui-sans-serif, system-ui, sans-serif;
   --font-mono: var(--font-jetbrains), ui-monospace, monospace;
 
   --ease-garage: cubic-bezier(0.22, 1, 0.36, 1);
+  --ease-snap: cubic-bezier(0.7, 0, 0.2, 1);
   --radius-xs: 2px;
 
   --animate-marquee: marquee 38s linear infinite;
+  --animate-marquee-fast: marquee 22s linear infinite;
   --animate-scan: scan 3.2s ease-in-out infinite;
   --animate-blink: blink 1.1s steps(2, start) infinite;
+  --animate-flicker: flicker 2.4s linear 1 both;
 
   @keyframes marquee {
     from { transform: translateX(0); }
@@ -38,6 +55,28 @@
   @keyframes blink {
     to { visibility: hidden; }
   }
+  /* Neon tube warming up — runs once, never loops. */
+  @keyframes flicker {
+    0%, 4%, 8%, 12% { opacity: 0.25; }
+    2%, 6%, 10%, 100% { opacity: 1; }
+  }
+}
+
+/* Semantic aliases — the brief's token vocabulary, usable in raw CSS. */
+:root {
+  --bg-primary: var(--color-ink);
+  --bg-secondary: var(--color-coal);
+  --surface: var(--color-char);
+  --neon-pink: var(--color-volt);
+  --neon-cyan: var(--color-cyan);
+  --neon-violet: var(--color-violet);
+  --acid: var(--color-acid);
+  --text-primary: var(--color-bone);
+  --text-muted: var(--color-mute);
+  --line: var(--color-line);
+  --glow: 0 0 18px rgb(255 46 147 / 0.55), 0 0 42px rgb(255 46 147 / 0.25);
+  --glow-cyan: 0 0 18px rgb(34 234 255 / 0.5), 0 0 42px rgb(34 234 255 / 0.2);
+  --header-h: 64px;
 }
 
 /* ───────────────────────── Base ───────────────────────── */
@@ -48,9 +87,12 @@
     -webkit-font-smoothing: antialiased;
     -moz-osx-font-smoothing: grayscale;
     text-rendering: optimizeLegibility;
+    color-scheme: dark;
   }
+  /* Transparent so the fixed .atmos layer (z -1) shows; html holds the base colour. */
   body {
-    background: var(--color-ink);
+    background: transparent;
+    overflow-x: clip;
     font-family: var(--font-sans);
     min-height: 100dvh;
   }
@@ -61,24 +103,28 @@
   button { cursor: pointer; }
   button:disabled { cursor: not-allowed; }
   :focus-visible {
-    outline: 1.5px solid var(--color-volt);
+    outline: 1.5px solid var(--color-cyan);
     outline-offset: 2px;
   }
   input, select, textarea { font: inherit; }
+  select option { background: var(--color-coal); }
 }
 
-/* ───────────────────────── Utilities ───────────────────────── */
+/* ───────────────────────── Type utilities ───────────────────────── */
+/* Semi-condensed technical face for UI chrome (buttons, nav, prices). */
 @utility font-wide {
-  font-stretch: 125%;
+  font-stretch: 82%;
 }
 @utility font-cond {
-  font-stretch: 72%;
+  font-stretch: 62%;
 }
+/* Headline voice: ultra-condensed, heavy, italic, uppercase. */
 @utility display {
-  font-stretch: 125%;
+  font-stretch: 62%;
   font-weight: 900;
-  line-height: 0.86;
-  letter-spacing: -0.035em;
+  font-style: italic;
+  line-height: 0.84;
+  letter-spacing: -0.012em;
   text-transform: uppercase;
 }
 @utility label {
@@ -94,6 +140,34 @@
   scrollbar-width: none;
   &::-webkit-scrollbar { display: none; }
 }
+@utility text-outline {
+  color: transparent;
+  -webkit-text-stroke: 1px var(--color-line-strong);
+}
+@utility text-outline-bone {
+  color: transparent;
+  -webkit-text-stroke: 1.5px rgb(243 241 255 / 0.85);
+}
+@utility text-outline-pink {
+  color: transparent;
+  -webkit-text-stroke: 1.5px var(--color-volt);
+}
+@utility text-outline-cyan {
+  color: transparent;
+  -webkit-text-stroke: 1.5px var(--color-cyan);
+}
+@utility neon-text {
+  text-shadow: 0 0 12px rgb(255 46 147 / 0.65), 0 0 38px rgb(255 46 147 / 0.35);
+}
+@utility neon-text-cyan {
+  text-shadow: 0 0 12px rgb(34 234 255 / 0.6), 0 0 38px rgb(34 234 255 / 0.3);
+}
+@utility vertical-text {
+  writing-mode: vertical-rl;
+  text-orientation: mixed;
+}
+
+/* ───────────────────────── Shape utilities ───────────────────────── */
 @utility clip-notch {
   clip-path: polygon(0 0, calc(100% - 12px) 0, 100% 12px, 100% 100%, 12px 100%, 0 calc(100% - 12px));
 }
@@ -103,6 +177,16 @@
 @utility clip-slant {
   clip-path: polygon(10px 0, 100% 0, calc(100% - 10px) 100%, 0 100%);
 }
+/* Racing plate: top-left + bottom-right chamfers. Used by AngularButton. */
+@utility clip-angle {
+  clip-path: polygon(11px 0, 100% 0, 100% calc(100% - 11px), calc(100% - 11px) 100%, 0 100%, 0 11px);
+}
+@utility clip-angle-sm {
+  clip-path: polygon(6px 0, 100% 0, 100% calc(100% - 6px), calc(100% - 6px) 100%, 0 100%, 0 6px);
+}
+@utility clip-tag {
+  clip-path: polygon(0 0, calc(100% - 8px) 0, 100% 50%, calc(100% - 8px) 100%, 0 100%);
+}
 @utility preserve-3d {
   transform-style: preserve-3d;
 }
@@ -110,37 +194,116 @@
   backface-visibility: hidden;
   -webkit-backface-visibility: hidden;
 }
-@utility text-outline {
-  color: transparent;
-  -webkit-text-stroke: 1px var(--color-line-strong);
+
+/* ───────────────────────── Glow utilities ───────────────────────── */
+@utility glow-pink {
+  box-shadow: var(--glow);
+}
+@utility glow-cyan {
+  box-shadow: var(--glow-cyan);
 }
 
-/* Film grain laid over everything — pure CSS/SVG, no assets. */
+/* ═══════════════════════ Atmosphere ═══════════════════════ */
+
+/* Site-wide night-garage backdrop: neon blooms bleeding in from the
+   edges + faint floor grid. Pure gradients on one fixed layer — no blur
+   filters, painted once. */
+.atmos::before {
+  content: "";
+  position: fixed;
+  inset: 0;
+  z-index: -1;
+  pointer-events: none;
+  background:
+    radial-gradient(60vw 45vh at 0% 0%, rgb(255 46 147 / 0.10), transparent 70%),
+    radial-gradient(55vw 50vh at 100% 100%, rgb(34 234 255 / 0.08), transparent 70%),
+    radial-gradient(70vw 40vh at 70% 20%, rgb(139 92 255 / 0.07), transparent 70%),
+    linear-gradient(180deg, #06060c 0%, #070712 55%, #05050a 100%);
+}
+
+/* Film grain laid over everything — static SVG noise, no animation. */
 .grain::after {
   content: "";
   position: fixed;
-  inset: -50%;
+  inset: 0;
   z-index: 100;
   pointer-events: none;
-  opacity: 0.07;
+  opacity: 0.06;
   background-image: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='220' height='220'><filter id='n'><feTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='3' stitchTiles='stitch'/><feColorMatrix values='0 0 0 0 1  0 0 0 0 1  0 0 0 0 1  0 0 0 0.55 0'/></filter><rect width='100%' height='100%' filter='url(%23n)'/></svg>");
-  animation: grain 1.2s steps(6) infinite;
-}
-@keyframes grain {
-  0% { transform: translate(0, 0); }
-  20% { transform: translate(-3%, 2%); }
-  40% { transform: translate(2%, -3%); }
-  60% { transform: translate(-2%, -1%); }
-  80% { transform: translate(3%, 3%); }
-  100% { transform: translate(0, 0); }
 }
 
 /* Faint technical grid used in studio / hero backdrops. */
 .bg-blueprint {
   background-image:
-    linear-gradient(to right, rgb(255 255 255 / 0.035) 1px, transparent 1px),
-    linear-gradient(to bottom, rgb(255 255 255 / 0.035) 1px, transparent 1px);
+    linear-gradient(to right, rgb(170 180 255 / 0.045) 1px, transparent 1px),
+    linear-gradient(to bottom, rgb(170 180 255 / 0.045) 1px, transparent 1px);
   background-size: 48px 48px;
+}
+
+/* Receding perspective floor grid, tinted neon toward the horizon. */
+.floor-grid {
+  background-image:
+    linear-gradient(to right, rgb(34 234 255 / 0.22) 1px, transparent 1px),
+    linear-gradient(to bottom, rgb(255 46 147 / 0.18) 1px, transparent 1px);
+  background-size: 64px 64px;
+  transform: perspective(520px) rotateX(62deg);
+  transform-origin: 50% 0%;
+  mask-image: linear-gradient(to bottom, black 0%, transparent 85%);
+}
+
+/* Light from a strip of neon tubes overhead. */
+.garage-light {
+  background:
+    radial-gradient(ellipse 38% 60% at 50% 0%, rgb(255 240 255 / 0.13), transparent 70%),
+    radial-gradient(ellipse 30% 55% at 18% 8%, rgb(255 46 147 / 0.22), transparent 70%),
+    radial-gradient(ellipse 30% 55% at 82% 8%, rgb(34 234 255 / 0.18), transparent 70%);
+}
+
+/* Wet-asphalt reflection under a subject. */
+.floor-reflection {
+  background:
+    radial-gradient(ellipse 45% 55% at 50% 0%, rgb(255 46 147 / 0.28), transparent 70%),
+    radial-gradient(ellipse 70% 80% at 50% 0%, rgb(34 234 255 / 0.12), transparent 75%);
+}
+
+/* Horizontal light streaks, like tail-lights on long exposure. */
+.speed-lines {
+  background-image:
+    repeating-linear-gradient(0deg, transparent 0 22px, rgb(243 241 255 / 0.05) 22px 23px, transparent 23px 57px, rgb(255 46 147 / 0.08) 57px 58px, transparent 58px 90px);
+}
+
+/* CRT-ish scanlines for HUD panels. */
+.scanlines {
+  background-image: repeating-linear-gradient(0deg, rgb(255 255 255 / 0.025) 0 1px, transparent 1px 3px);
+}
+
+/* Barcode strip. */
+.barcode {
+  background-image: repeating-linear-gradient(90deg,
+    currentColor 0 2px, transparent 2px 4px, currentColor 4px 5px, transparent 5px 8px,
+    currentColor 8px 11px, transparent 11px 12px, currentColor 12px 13px, transparent 13px 17px);
+}
+
+/* Hand-drawn stroke that draws itself in. Set --len on the path. */
+.draw-in {
+  stroke-dasharray: var(--len, 1000);
+  stroke-dashoffset: var(--len, 1000);
+  animation: draw 0.7s var(--ease-garage) forwards;
+  animation-delay: var(--delay, 0s);
+}
+@keyframes draw {
+  to { stroke-dashoffset: 0; }
+}
+
+/* Page-level wipe used by the store template. */
+@keyframes wipe-out {
+  0% { transform: scaleX(0); transform-origin: left; }
+  45% { transform: scaleX(1); transform-origin: left; }
+  55% { transform: scaleX(1); transform-origin: right; }
+  100% { transform: scaleX(0); transform-origin: right; }
+}
+.page-wipe {
+  animation: wipe-out 0.55s var(--ease-snap) both;
 }
 
 /* Range sliders styled as HUD bars. */
@@ -152,11 +315,11 @@
 }
 .hud-range::-webkit-slider-runnable-track {
   height: 2px;
-  background: linear-gradient(to right, var(--color-volt) var(--fill, 50%), var(--color-line-strong) var(--fill, 50%));
+  background: linear-gradient(to right, var(--color-cyan) var(--fill, 50%), var(--color-line-strong) var(--fill, 50%));
 }
 .hud-range::-moz-range-track {
   height: 2px;
-  background: linear-gradient(to right, var(--color-volt) var(--fill, 50%), var(--color-line-strong) var(--fill, 50%));
+  background: linear-gradient(to right, var(--color-cyan) var(--fill, 50%), var(--color-line-strong) var(--fill, 50%));
 }
 .hud-range::-webkit-slider-thumb {
   appearance: none;
@@ -164,22 +327,32 @@
   height: 14px;
   margin-top: -6px;
   background: var(--color-ink);
-  border: 2px solid var(--color-volt);
+  border: 2px solid var(--color-cyan);
   transform: rotate(45deg);
+  box-shadow: 0 0 10px rgb(34 234 255 / 0.6);
 }
 .hud-range::-moz-range-thumb {
   width: 11px;
   height: 11px;
   border-radius: 0;
   background: var(--color-ink);
-  border: 2px solid var(--color-volt);
+  border: 2px solid var(--color-cyan);
   transform: rotate(45deg);
 }
 
 @media (prefers-reduced-motion: reduce) {
-  .grain::after { animation: none; }
   *, *::before, *::after {
     animation-duration: 0.01ms !important;
     animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
   }
+  .draw-in { stroke-dashoffset: 0; }
+}
+
+/* New page slides in from the right — ends at transform: none. */
+@keyframes page-in {
+  from { opacity: 0; transform: translateX(28px); }
+}
+.page-in {
+  animation: page-in 0.38s var(--ease-garage) backwards;
 }

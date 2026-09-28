@@ -22,22 +22,22 @@ function Turntable() {
       <group ref={group}>
         <mesh receiveShadow>
           <cylinderGeometry args={[2.6, 2.7, 0.12, 96]} />
-          <meshStandardMaterial color="#141414" metalness={0.85} roughness={0.35} />
+          <meshStandardMaterial color="#0d0d1a" metalness={0.9} roughness={0.28} />
         </mesh>
         <mesh position={[0, 0.062, 0]} rotation={[-Math.PI / 2, 0, 0]}>
           <ringGeometry args={[2.2, 2.24, 96]} />
-          <meshBasicMaterial color="#c8ff2e" transparent opacity={0.55} />
+          <meshBasicMaterial color="#ff2e93" transparent opacity={0.75} />
         </mesh>
         {ticks.map((a, i) => (
           <mesh key={i} position={[Math.cos(a) * 2.42, 0.064, Math.sin(a) * 2.42]} rotation={[-Math.PI / 2, 0, -a]}>
             <planeGeometry args={[i % 4 === 0 ? 0.22 : 0.1, 0.02]} />
-            <meshBasicMaterial color={i === 0 ? "#c8ff2e" : "#eeebe3"} transparent opacity={i % 4 === 0 ? 0.6 : 0.25} />
+            <meshBasicMaterial color={i === 0 ? "#ff2e93" : "#22eaff"} transparent opacity={i % 4 === 0 ? 0.7 : 0.3} />
           </mesh>
         ))}
       </group>
       <mesh position={[0, -0.07, 0]} rotation={[-Math.PI / 2, 0, 0]}>
         <ringGeometry args={[2.72, 2.76, 96]} />
-        <meshBasicMaterial color="#eeebe3" transparent opacity={0.12} />
+        <meshBasicMaterial color="#22eaff" transparent opacity={0.35} />
       </mesh>
     </group>
   );
@@ -73,7 +73,7 @@ function Dust({ count = 260 }: { count?: number }) {
       <bufferGeometry>
         <bufferAttribute attach="attributes-position" args={[positions, 3]} />
       </bufferGeometry>
-      <pointsMaterial size={0.025} color="#eeebe3" transparent opacity={0.45} sizeAttenuation depthWrite={false} />
+      <pointsMaterial size={0.025} color="#d9d4ff" transparent opacity={0.4} sizeAttenuation depthWrite={false} />
     </points>
   );
 }
@@ -81,13 +81,13 @@ function Dust({ count = 260 }: { count?: number }) {
 function Scene() {
   return (
     <>
-      <fog attach="fog" args={["#0a0a0a", 7, 22]} />
+      <fog attach="fog" args={["#06060c", 7, 22]} />
       <ambientLight intensity={0.25} />
-      <spotLight position={[0, 9, 2]} angle={0.45} penumbra={0.9} intensity={60} color="#fffaf0" />
-      <pointLight position={[-5, 1, 3]} intensity={6} color="#c8ff2e" distance={12} />
-      <pointLight position={[5, 1, -2]} intensity={4} color="#9fb4ff" distance={12} />
+      <spotLight position={[0, 9, 2]} angle={0.45} penumbra={0.9} intensity={60} color="#f4eeff" />
+      <pointLight position={[-5, 1, 3]} intensity={9} color="#ff2e93" distance={12} />
+      <pointLight position={[5, 1, -2]} intensity={8} color="#22eaff" distance={12} />
       <Turntable />
-      <gridHelper args={[60, 60, "#262626", "#1a1a1a"]} position={[0, -2.32, 0]} />
+      <gridHelper args={[60, 60, "#3a1f4d", "#141429"]} position={[0, -2.32, 0]} />
       <Dust />
     </>
   );

@@ -27,7 +27,7 @@ function usePanelValue() {
   };
 }
 
-/** Desktop: vertical game-menu list. */
+/** Desktop: vertical game-menu list — `04  FRONT ━━━━━`. */
 export function CustomizerNavigation() {
   const panel = useCustomizer((s) => s.panel);
   const setPanel = useCustomizer((s) => s.setPanel);
@@ -36,14 +36,23 @@ export function CustomizerNavigation() {
 
   return (
     <nav className="flex h-full flex-col" aria-label="Customization categories">
-      <p className="label mb-4 px-5 text-fog">Customize</p>
+      <div className="mb-5 px-5">
+        <p className="label flex items-center gap-2 text-fog">
+          <span className="h-1.5 w-1.5 bg-cyan shadow-[0_0_8px_rgb(34_234_255/0.9)]" /> Tuning menu
+        </p>
+        <p className="display mt-1 text-3xl">Customize</p>
+      </div>
       <ul className="flex-1">
         {PANELS.map((p, i) => {
           const active = p.id === panel;
           const hasArt = isZonePanel(p.id) && designs[p.id].length > 0;
           return (
             <li key={p.id}>
-              {i === 3 && <p className="label mt-4 mb-2 px-5 text-[9px]! text-fog">Print locations</p>}
+              {i === 3 && (
+                <p className="label mt-5 mb-2 flex items-center gap-2 px-5 text-[9px]! text-fog">
+                  Print locations <span className="h-px flex-1 bg-line" />
+                </p>
+              )}
               <button
                 onClick={() => {
                   if (p.id !== panel) sound.play("select");
@@ -51,23 +60,53 @@ export function CustomizerNavigation() {
                 }}
                 onMouseEnter={() => sound.play("hover")}
                 aria-current={active}
-                className={cn("group relative flex w-full items-center gap-3 px-5 py-2.5 text-left transition-colors", active ? "text-ink" : "text-bone-dim hover:text-bone")}
+                className={cn("group relative flex w-full items-center gap-3 overflow-hidden px-5 py-2.5 text-left transition-colors", active ? "text-bone" : "text-bone-dim/70 hover:text-bone")}
               >
-                {active && <motion.span layoutId="nav-active" className="absolute inset-y-0 left-0 right-3 bg-volt clip-slant" transition={{ type: "spring", stiffness: 500, damping: 40 }} />}
-                <span className={cn("relative font-mono text-[10px]", active ? "text-ink/60" : "text-fog")}>{String(i + 1).padStart(2, "0")}</span>
-                <span className="relative flex-1 font-wide text-[13px] font-black tracking-wide uppercase transition-transform duration-300 group-hover:translate-x-1">
+                {active && (
+                  <motion.span
+                    layoutId="nav-active"
+                    className="absolute inset-y-0 left-0 right-0 bg-gradient-to-r from-volt/25 via-volt/5 to-transparent"
+                    transition={{ type: "spring", stiffness: 520, damping: 42 }}
+                  >
+                    <span className="absolute inset-y-0 left-0 w-[3px] bg-volt shadow-[0_0_12px_rgb(255_46_147/0.9)]" />
+                  </motion.span>
+                )}
+                <span className={cn("relative font-mono text-[10px] transition-colors", active ? "text-volt" : "text-fog group-hover:text-volt")}>
+                  {String(i + 1).padStart(2, "0")}
+                </span>
+                <span
+                  className={cn(
+                    "relative font-wide text-[15px] font-extrabold tracking-wide uppercase italic transition-transform duration-200",
+                    active ? "translate-x-1" : "group-hover:translate-x-1",
+                  )}
+                >
                   {p.label}
                 </span>
-                <span className={cn("relative max-w-[88px] truncate font-mono text-[10px] uppercase", active ? "text-ink/70" : hasArt ? "text-volt" : "text-fog")}>{value(p.id)}</span>
+                {/* Racing-line indicator */}
+                <span className="relative flex h-px flex-1 items-center">
+                  <motion.span
+                    className="h-[2px] w-full origin-left bg-bone"
+                    initial={false}
+                    animate={{ scaleX: active ? 1 : 0, opacity: active ? 1 : 0 }}
+                    transition={{ duration: 0.25, ease: [0.22, 1, 0.36, 1] }}
+                  />
+                </span>
+                <span className={cn("relative max-w-[88px] truncate font-mono text-[10px] uppercase", active ? "text-bone" : hasArt ? "text-cyan" : "text-fog")}>{value(p.id)}</span>
               </button>
             </li>
           );
         })}
       </ul>
       <div className="label space-y-1 border-t border-line px-5 pt-4 text-[9px]! text-fog">
-        <p>↑ ↓ Category · ← → Option</p>
-        <p>WASD Nudge · Q E Rotate · [ ] Scale</p>
-        <p>Del Remove · C Center · F Finish · ? Help</p>
+        <p>
+          <span className="text-bone-dim">↑ ↓</span> Category · <span className="text-bone-dim">← →</span> Option
+        </p>
+        <p>
+          <span className="text-bone-dim">WASD</span> Nudge · <span className="text-bone-dim">Q E</span> Rotate · <span className="text-bone-dim">[ ]</span> Scale
+        </p>
+        <p>
+          <span className="text-bone-dim">Del</span> Remove · <span className="text-bone-dim">C</span> Center · <span className="text-bone-dim">F</span> Finish · <span className="text-bone-dim">?</span> Help
+        </p>
       </div>
     </nav>
   );
@@ -79,8 +118,8 @@ export function CustomizerTabs() {
   const setPanel = useCustomizer((s) => s.setPanel);
   const designs = useCustomizer((s) => s.designs);
   return (
-    <div className="no-scrollbar flex gap-1 overflow-x-auto border-y border-line bg-coal px-2 py-2" role="tablist" aria-label="Customization categories">
-      {PANELS.map((p) => {
+    <div className="no-scrollbar flex gap-0.5 overflow-x-auto border-y border-line bg-coal/95 px-2 py-2" role="tablist" aria-label="Customization categories">
+      {PANELS.map((p, i) => {
         const active = p.id === panel;
         const hasArt = isZonePanel(p.id) && designs[p.id].length > 0;
         return (
@@ -95,12 +134,13 @@ export function CustomizerTabs() {
             ref={(el) => {
               if (active && el) el.scrollIntoView({ block: "nearest", inline: "center", behavior: "smooth" });
             }}
-            className={cn("relative shrink-0 px-3.5 py-2 font-wide text-[11px] font-black tracking-wide uppercase", active ? "text-ink" : "text-bone-dim")}
+            className={cn("relative flex min-h-11 shrink-0 items-center px-3.5 font-wide text-[12px] font-extrabold tracking-wide uppercase italic", active ? "text-ink" : "text-bone-dim")}
           >
-            {active && <motion.span layoutId="tab-active" className="absolute inset-0 bg-volt" transition={{ type: "spring", stiffness: 500, damping: 40 }} />}
+            {active && <motion.span layoutId="tab-active" className="clip-angle-sm absolute inset-0 bg-volt shadow-[0_0_14px_rgb(255_46_147/0.5)]" transition={{ type: "spring", stiffness: 500, damping: 40 }} />}
             <span className="relative flex items-center gap-1.5">
+              <span className={cn("font-mono text-[9px] not-italic", active ? "text-ink/60" : "text-fog")}>{String(i + 1).padStart(2, "0")}</span>
               {p.short}
-              {hasArt && <span className={cn("h-1 w-1", active ? "bg-ink" : "bg-volt")} />}
+              {hasArt && <span className={cn("h-1 w-1", active ? "bg-ink" : "bg-cyan")} />}
             </span>
           </button>
         );

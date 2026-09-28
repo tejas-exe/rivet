@@ -1,6 +1,6 @@
 "use client";
 import { AnimatePresence, motion } from "framer-motion";
-import { ArrowRight, ChevronDown, Heart, Ruler, ShieldCheck, Truck, Wand2, X } from "lucide-react";
+import { ArrowRight, ChevronDown, Heart, Plus, Ruler, ShieldCheck, Truck, Wand2, X } from "lucide-react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useState } from "react";
@@ -8,6 +8,7 @@ import { GarmentImage } from "@/components/garment/GarmentImage";
 import { Button } from "@/components/ui/Button";
 import { Container, SectionHeader, Stars } from "@/components/ui/misc";
 import { QuantityStepper } from "@/components/ui/QuantityStepper";
+import { Barcode, CornerFrame, RoughCircle, StreetTag, TechnicalDivider } from "@/components/ui/street";
 import { COLORS } from "@/data/colors";
 import { CATEGORY_META, relatedProducts } from "@/data/products";
 import { RATING_BREAKDOWN, REVIEWS, SIZE_GUIDE, type Review } from "@/data/reviews";
@@ -22,6 +23,7 @@ import { useShopActions } from "./useShopActions";
 
 const VIEW_LABEL: Record<GarmentView, string> = { front: "Front", back: "Back", detail: "Collar detail", leftSleeve: "Sleeve", rightSleeve: "Sleeve" };
 
+/** Cinematic product stage: garage lighting, wet floor grid, HUD read-outs. */
 function Gallery({ product, color }: { product: Product; color: ColorId }) {
   const [active, setActive] = useState(0);
   const [zoom, setZoom] = useState<{ x: number; y: number } | null>(null);
@@ -34,14 +36,18 @@ function Gallery({ product, color }: { product: Product; color: ColorId }) {
             key={v + i}
             onClick={() => setActive(i)}
             aria-label={`Show ${VIEW_LABEL[v]}`}
-            className={cn("relative aspect-square w-20 shrink-0 bg-char ring-1 transition-all md:w-full", i === active ? "ring-volt" : "ring-line hover:ring-line-strong")}
+            className={cn(
+              "group relative aspect-square w-20 shrink-0 bg-char/50 transition-all md:w-full",
+              i === active ? "ring-1 ring-volt shadow-[0_0_14px_rgb(255_46_147/0.35)]" : "ring-1 ring-line hover:ring-line-strong",
+            )}
           >
-            <GarmentImage silhouette={product.silhouette} color={color} view={v} rich={false} className="h-full w-full p-1.5" />
+            <GarmentImage silhouette={product.silhouette} color={color} view={v} rich={false} className="h-full w-full p-1.5 transition-transform duration-200 group-hover:scale-105" />
+            <span className={cn("label absolute top-1 left-1 text-[8px]!", i === active ? "text-volt" : "text-fog")}>Cam {String(i + 1).padStart(2, "0")}</span>
           </button>
         ))}
       </div>
       <div
-        className="relative aspect-square flex-1 cursor-zoom-in overflow-hidden bg-char md:aspect-[5/5.4]"
+        className="relative isolate aspect-square flex-1 cursor-zoom-in overflow-hidden md:aspect-[5/5.4]"
         onPointerMove={(e) => {
           if (e.pointerType !== "mouse") return;
           const r = e.currentTarget.getBoundingClientRect();
@@ -49,14 +55,21 @@ function Gallery({ product, color }: { product: Product; color: ColorId }) {
         }}
         onPointerLeave={() => setZoom(null)}
       >
-        <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_50%_25%,rgba(255,255,255,0.12),transparent_60%)]" />
+        <div className="absolute inset-0 -z-10 bg-gradient-to-b from-char/70 via-coal/40 to-ink/0" />
+        <div className="garage-light absolute inset-0 -z-10" />
+        <div className="absolute inset-x-0 bottom-0 -z-10 h-[38%] overflow-hidden opacity-60">
+          <div className="floor-grid absolute inset-x-[-20%] top-0 h-[200%]" />
+        </div>
+        <p aria-hidden className="display text-outline pointer-events-none absolute top-[6%] left-1/2 -z-10 -translate-x-1/2 text-[clamp(6rem,16vw,15rem)] whitespace-nowrap">
+          {product.buildName}
+        </p>
         <AnimatePresence mode="wait">
           <motion.div
             key={view + active}
-            initial={{ opacity: 0, x: 30 }}
-            animate={{ opacity: 1, x: 0 }}
-            exit={{ opacity: 0, x: -30 }}
-            transition={{ duration: 0.4, ease: [0.22, 1, 0.36, 1] }}
+            initial={{ opacity: 0, x: 40, scale: 0.97 }}
+            animate={{ opacity: 1, x: 0, scale: 1 }}
+            exit={{ opacity: 0, x: -40, scale: 0.97 }}
+            transition={{ duration: 0.28, ease: [0.22, 1, 0.36, 1] }}
             className="absolute inset-[5%]"
           >
             <div
@@ -67,11 +80,21 @@ function Gallery({ product, color }: { product: Product; color: ColorId }) {
             </div>
           </motion.div>
         </AnimatePresence>
-        <div className="label pointer-events-none absolute bottom-4 left-4 flex items-center gap-3 text-fog">
-          <span className="text-bone">{String(active + 1).padStart(2, "0")}</span>
+        <CornerFrame tone="cyan" size={16} className="m-3" />
+        <div className="label pointer-events-none absolute top-5 left-6 space-y-1 text-fog">
+          <p className="text-bone">RVT / {product.id.replace("p-", "")}</p>
+          <p>{product.weight}</p>
+        </div>
+        <div className="label pointer-events-none absolute top-5 right-6 text-right text-fog">
+          <p>{COLORS[color].name}</p>
+          <p className="text-cyan">Studio lit</p>
+        </div>
+        <div className="label pointer-events-none absolute bottom-5 left-6 flex items-center gap-3 text-fog">
+          <span className="text-volt">{String(active + 1).padStart(2, "0")}</span>
           <span className="h-px w-8 bg-line-strong" />
           {String(product.images.length).padStart(2, "0")} — {VIEW_LABEL[view]}
         </div>
+        <Barcode className="pointer-events-none absolute right-6 bottom-5" />
       </div>
     </div>
   );
@@ -152,7 +175,7 @@ function Reviews({ product }: { product: Product }) {
   return (
     <div id="reviews" className="grid gap-12 lg:grid-cols-[320px_1fr]">
       <div>
-        <p className="font-wide text-7xl font-black">{product.rating.toFixed(1)}</p>
+        <p className="display text-9xl text-volt neon-text">{product.rating.toFixed(1)}</p>
         <Stars rating={product.rating} size={16} className="mt-2" />
         <p className="label mt-3 text-mute">{product.reviews.toLocaleString("en-IN")} reviews</p>
         <div className="mt-8 space-y-2">
@@ -254,67 +277,92 @@ export function ProductDetail({ product, initialColor }: { product: Product; ini
           <Link href={`/shop/${CATEGORY_META[product.category].slug}`} className="hover:text-bone">
             {CATEGORY_META[product.category].plural}
           </Link>
-          / <span className="text-bone-dim">{product.name}</span>
+          / <span className="text-volt">{product.name}</span>
         </nav>
 
-        <div className="grid gap-10 lg:grid-cols-[1.25fr_1fr] lg:gap-16">
-          <div className="lg:sticky lg:top-28 lg:self-start">
+        <div className="grid gap-10 lg:grid-cols-[1.35fr_1fr] lg:gap-14">
+          <div className="lg:sticky lg:top-24 lg:self-start">
             <Gallery product={product} color={color} />
           </div>
 
           <div>
             <div className="flex items-start justify-between gap-4">
-              <div>
-                <p className="label mb-3 flex items-center gap-2 text-mute">
-                  {CATEGORY_META[product.category].label}
-                  {product.isNew && <span className="bg-bone px-1.5 text-ink">New</span>}
+              <div className="min-w-0">
+                <p className="label mb-4 flex items-center gap-3 text-mute">
+                  <span className="h-1.5 w-1.5 bg-volt shadow-[0_0_8px_rgb(255_46_147/0.9)]" />
+                  {CATEGORY_META[product.category].label} <span className="text-fog">/ Street series</span>
+                  {product.isNew && <StreetTag tone="acid">New</StreetTag>}
                 </p>
-                <h1 className="display text-[clamp(2.4rem,5vw,4.2rem)]">{product.name}</h1>
+                <h1 className="display text-[clamp(3.2rem,7vw,6.2rem)]">
+                  {product.name.split(" ").map((w, i, arr) => (
+                    <span key={i} className={cn("block", i === arr.length - 1 && arr.length > 1 && "text-outline-bone not-italic")}>
+                      {w}
+                    </span>
+                  ))}
+                </h1>
               </div>
               <button
                 onClick={() => toggleWishlist(product)}
                 aria-label={wished ? "Remove from wishlist" : "Add to wishlist"}
-                className="mt-1 grid h-12 w-12 shrink-0 place-items-center border border-line-strong hover:border-volt"
+                className="clip-angle-sm mt-1 grid h-12 w-12 shrink-0 place-items-center bg-steel/60 transition-colors hover:bg-volt/20"
               >
-                <Heart size={19} className={cn(hydrated && wished && "fill-volt text-volt")} />
+                <Heart size={19} className={cn(hydrated && wished && "fill-volt text-volt drop-shadow-[0_0_6px_rgb(255_46_147/0.9)]")} />
               </button>
             </div>
-            <a href="#reviews" className="mt-4 inline-flex items-center gap-3 text-sm text-mute hover:text-bone">
+            <a href="#reviews" className="mt-5 inline-flex items-center gap-3 text-sm text-mute hover:text-bone">
               <Stars rating={product.rating} /> {product.rating.toFixed(1)} · {product.reviews.toLocaleString("en-IN")} reviews
             </a>
-            <div className="mt-6 flex items-baseline gap-3">
-              <span className="font-wide text-3xl font-black">{formatINR(product.basePrice)}</span>
-              {product.compareAtPrice && <span className="font-mono text-fog line-through">{formatINR(product.compareAtPrice)}</span>}
-              <span className="label text-fog">Incl. of all taxes</span>
+            <div className="mt-6 flex items-end gap-4">
+              <span className="display neon-text text-7xl text-volt md:text-8xl">{formatINR(product.basePrice)}</span>
+              <div className="pb-2">
+                {product.compareAtPrice && <p className="font-mono text-fog line-through">{formatINR(product.compareAtPrice)}</p>}
+                <p className="label text-fog">Base / Incl. all taxes</p>
+              </div>
             </div>
-            <p className="mt-6 max-w-lg leading-relaxed text-bone-dim">{product.tagline} {product.description.split(".")[0]}.</p>
+            <p className="mt-6 max-w-lg leading-relaxed text-bone-dim">
+              {product.tagline} {product.description.split(".")[0]}.
+            </p>
 
-            <div className="mt-8 border-t border-line pt-6">
-              <p className="label mb-3 text-mute">
-                Color — <span className="text-bone">{COLORS[color].name}</span>
-              </p>
-              <div className="flex gap-2" role="radiogroup" aria-label="Color">
-                {product.colors.map((c) => (
-                  <button
-                    key={c}
-                    role="radio"
-                    aria-checked={c === color}
-                    aria-label={COLORS[c].name}
-                    onClick={() => setColor(c)}
-                    className={cn("p-1 ring-1 transition-all", c === color ? "ring-volt" : "ring-line hover:ring-line-strong")}
-                  >
-                    <span className="block h-9 w-9" style={{ background: COLORS[c].swatch }} />
-                  </button>
-                ))}
+            {/* Paint selector */}
+            <div className="mt-8">
+              <TechnicalDivider label="01 / Paint" meta={`${String(product.colors.indexOf(color) + 1).padStart(2, "0")} — ${COLORS[color].name}`} className="mb-4" />
+              <div className="flex gap-3" role="radiogroup" aria-label="Color">
+                {product.colors.map((c, i) => {
+                  const on = c === color;
+                  return (
+                    <button
+                      key={c}
+                      role="radio"
+                      aria-checked={on}
+                      aria-label={COLORS[c].name}
+                      onClick={() => setColor(c)}
+                      className="group relative flex flex-col items-start gap-2"
+                    >
+                      <span
+                        className={cn(
+                          "block h-14 w-20 -skew-x-12 transition-transform duration-200 group-hover:scale-110",
+                          on ? "ring-2 ring-volt ring-offset-2 ring-offset-ink shadow-[0_0_18px_rgb(255_46_147/0.55)]" : "ring-1 ring-white/15",
+                        )}
+                        style={{ background: `linear-gradient(135deg, rgb(255 255 255 / 0.25), transparent 45%), ${COLORS[c].swatch}` }}
+                      />
+                      {on && <RoughCircle key={c} className="-top-3 -left-4 h-[90px] w-[112px]" width={2} />}
+                      <span className={cn("label text-[9.5px]!", on ? "text-bone" : "text-fog")}>
+                        {String(i + 1).padStart(2, "0")} {COLORS[c].name}
+                      </span>
+                    </button>
+                  );
+                })}
               </div>
             </div>
 
-            <div className="mt-7">
-              <div className="mb-3 flex items-center justify-between">
-                <p className={cn("label transition-colors", sizeError ? "text-alert" : "text-mute")}>
-                  {sizeError ? "Select a size to continue" : <>Size {size && <>— <span className="text-bone">{size}</span></>}</>}
+            {/* Size selector */}
+            <div className="mt-8">
+              <div className="mb-4 flex items-center gap-4">
+                <p className={cn("label shrink-0 transition-colors", sizeError ? "text-alert" : "text-fog")}>
+                  {sizeError ? "Select a size to continue" : <>02 / Size {size && <span className="text-bone">— {size}</span>}</>}
                 </p>
-                <button onClick={() => setGuide(true)} className="label flex items-center gap-1.5 text-bone-dim hover:text-volt">
+                <span className="h-px flex-1 bg-line-strong" />
+                <button onClick={() => setGuide(true)} className="label flex shrink-0 items-center gap-1.5 text-cyan hover:text-bone">
                   <Ruler size={13} /> Size guide
                 </button>
               </div>
@@ -328,10 +376,10 @@ export function ProductDetail({ product, initialColor }: { product: Product; ini
                       onClick={() => setSize(s)}
                       aria-pressed={size === s}
                       className={cn(
-                        "relative h-12 border font-mono text-sm transition-colors",
-                        size === s ? "border-volt bg-volt text-ink" : "border-line-strong hover:border-bone",
-                        !available && "text-fog line-through opacity-50 hover:border-line-strong",
-                        sizeError && !size && "border-alert/60",
+                        "clip-angle-sm relative h-14 font-wide text-lg font-extrabold italic transition-colors duration-150",
+                        size === s ? "bg-volt text-ink" : "bg-steel/60 text-bone-dim hover:bg-line-strong hover:text-bone",
+                        !available && "text-fog line-through opacity-50",
+                        sizeError && !size && "bg-alert/20",
                       )}
                     >
                       {s}
@@ -342,31 +390,36 @@ export function ProductDetail({ product, initialColor }: { product: Product; ini
             </div>
 
             <div className="mt-7 flex items-center gap-4">
-              <p className="label text-mute">Qty</p>
+              <p className="label text-fog">03 / Qty</p>
               <QuantityStepper value={qty} onChange={setQty} />
             </div>
 
-            <div className="mt-8 grid gap-2">
-              <Button size="lg" onClick={add} block>
-                Add to cart — {formatINR(product.basePrice * qty)}
-              </Button>
-              <div className="grid gap-2 sm:grid-cols-2">
-                <Button size="lg" variant="ghost" onClick={customize} iconLeft={<Wand2 size={15} />}>
+            <div className="mt-9 grid gap-2">
+              <div className="relative">
+                <StreetTag tone="cyan" rotate={3} className="absolute -top-3 right-3 z-10">
+                  Build mode
+                </StreetTag>
+                <Button size="xl" onClick={customize} block iconLeft={<Wand2 size={17} />} icon={<ArrowRight size={17} />}>
                   Customize this
                 </Button>
-                <Button size="lg" variant="bone" onClick={buyNow} icon={<ArrowRight size={15} />}>
+              </div>
+              <div className="grid gap-2 sm:grid-cols-2">
+                <Button size="lg" variant="bone" onClick={add} icon={<Plus size={15} strokeWidth={3} />}>
+                  Add to cart — {formatINR(product.basePrice * qty)}
+                </Button>
+                <Button size="lg" variant="ghost" onClick={buyNow} icon={<ArrowRight size={15} />}>
                   Buy now
                 </Button>
               </div>
             </div>
 
-            <div className="mt-6 grid grid-cols-2 gap-px bg-line text-xs">
-              <div className="flex items-center gap-3 bg-ink py-3 pr-3">
-                <Truck size={16} className="shrink-0 text-volt" />
+            <div className="mt-6 grid grid-cols-2 border-y border-line text-xs">
+              <div className="flex items-center gap-3 py-3 pr-3">
+                <Truck size={16} className="shrink-0 text-cyan" />
                 <span className="text-mute">Free shipping over {formatINR(FREE_SHIPPING_THRESHOLD)}</span>
               </div>
-              <div className="flex items-center gap-3 bg-ink py-3 pl-3">
-                <ShieldCheck size={16} className="shrink-0 text-volt" />
+              <div className="flex items-center gap-3 border-l border-line py-3 pl-3">
+                <ShieldCheck size={16} className="shrink-0 text-cyan" />
                 <span className="text-mute">7-day size exchanges</span>
               </div>
             </div>
@@ -398,19 +451,19 @@ export function ProductDetail({ product, initialColor }: { product: Product; ini
         </div>
       </Container>
 
-      <section className="mt-24 border-t border-line py-20">
+      <section className="relative mt-24 border-t border-line py-20">
         <Container className="grid gap-12 lg:grid-cols-2">
           <div className="min-w-0">
-            <SectionHeader eyebrow="Product description" title="The details" />
+            <SectionHeader index="04" eyebrow="Product description" title={<>The <em>details</em></>} />
             <p className="mt-8 max-w-xl leading-relaxed text-bone-dim">{product.description}</p>
-            <dl className="mt-8 grid max-w-xl grid-cols-2 gap-px bg-line">
+            <dl className="mt-8 grid max-w-xl grid-cols-2 border-t border-line">
               {[
                 ["Fabric", product.material.split(",")[0]],
                 ["Weight", product.weight],
                 ["Fit", product.fit.split(" —")[0]],
                 ["Printable", product.category === "hoodie" ? "Front · Back · Sleeves" : "Front · Back · Sleeves"],
               ].map(([k, v]) => (
-                <div key={k} className="bg-ink py-4 pr-4">
+                <div key={k} className="border-b border-line py-4 pr-4">
                   <dt className="label text-fog">{k}</dt>
                   <dd className="mt-1 text-sm">{v}</dd>
                 </div>
@@ -418,7 +471,7 @@ export function ProductDetail({ product, initialColor }: { product: Product; ini
             </dl>
           </div>
           <div id="size-guide" className="min-w-0">
-            <SectionHeader eyebrow="Measurements" title="Size guide" />
+            <SectionHeader index="05" eyebrow="Measurements" title={<>Size <em>guide</em></>} />
             <div className="mt-8">
               <SizeGuideTable product={product} />
             </div>
@@ -428,15 +481,15 @@ export function ProductDetail({ product, initialColor }: { product: Product; ini
 
       <section className="border-t border-line py-20">
         <Container>
-          <SectionHeader eyebrow="What builders say" title="Reviews" className="mb-12" />
+          <SectionHeader index="06" eyebrow="What builders say" title={<>Re<em>views</em></>} className="mb-12" />
           <Reviews product={product} />
         </Container>
       </section>
 
       <section className="border-t border-line py-20">
         <Container>
-          <SectionHeader eyebrow="Keep building" title="You may also like" />
-          <div className="mt-12 grid max-w-3xl grid-cols-2 gap-x-3 gap-y-10">
+          <SectionHeader index="07" eyebrow="Keep building" title={<>You may<br /><em>also like</em></>} />
+          <div className="mt-12 grid max-w-3xl grid-cols-2 gap-x-4 gap-y-10">
             {relatedProducts(product).map((p, i) => (
               <ProductCard key={p.id} product={p} index={i} />
             ))}
@@ -448,18 +501,19 @@ export function ProductDetail({ product, initialColor }: { product: Product; ini
       <div className="h-20 lg:hidden" aria-hidden />
 
       {/* Mobile sticky buy bar */}
-      <div className="fixed inset-x-0 bottom-0 z-40 flex items-center gap-3 border-t border-line bg-ink/95 p-3 backdrop-blur lg:hidden">
+      <div className="fixed inset-x-0 bottom-0 z-40 flex items-center gap-2 border-t border-line-strong bg-ink/95 p-3 backdrop-blur lg:hidden" style={{ paddingBottom: "max(0.75rem, env(safe-area-inset-bottom))" }}>
+        <span className="absolute inset-x-0 top-0 h-px bg-gradient-to-r from-transparent via-volt/70 to-transparent" />
         <div className="min-w-0 flex-1">
-          <p className="truncate text-xs font-bold uppercase">{product.name}</p>
-          <p className="font-mono text-xs text-mute">
-            {formatINR(product.basePrice)} · {COLORS[color].name} {size ? `· ${size}` : ""}
+          <p className="display truncate text-xl">{product.name}</p>
+          <p className="font-mono text-[11px] text-mute">
+            <span className="text-volt">{formatINR(product.basePrice)}</span> · {COLORS[color].name} {size ? `· ${size}` : ""}
           </p>
         </div>
-        <button onClick={customize} className="grid h-11 w-11 place-items-center border border-line-strong" aria-label="Customize this">
-          <Wand2 size={16} />
-        </button>
-        <Button onClick={add} size="md">
-          Add
+        <Button onClick={add} size="md" variant="ghost" className="px-4" aria-label="Add to cart">
+          <Plus size={16} strokeWidth={3} />
+        </Button>
+        <Button onClick={customize} size="md" iconLeft={<Wand2 size={14} />}>
+          Build
         </Button>
       </div>
 
@@ -467,7 +521,7 @@ export function ProductDetail({ product, initialColor }: { product: Product; ini
         {guide && (
           <div className="fixed inset-0 z-[80] grid place-items-center p-4" role="dialog" aria-modal="true" aria-label="Size guide">
             <motion.div className="absolute inset-0 bg-black/75" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} onClick={() => setGuide(false)} />
-            <motion.div initial={{ opacity: 0, y: 30 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: 20 }} className="relative w-full max-w-xl border border-line-strong bg-coal p-6">
+            <motion.div initial={{ opacity: 0, y: 30 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: 20 }} className="relative w-full max-w-xl border-t-2 border-volt bg-coal p-6">
               <div className="mb-6 flex items-center justify-between">
                 <p className="display text-3xl">Size guide</p>
                 <button onClick={() => setGuide(false)} aria-label="Close">

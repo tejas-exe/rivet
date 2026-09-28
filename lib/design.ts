@@ -32,10 +32,13 @@ export function constrainDesign(d: Design, zoneW: number, zoneH: number): Design
   return { ...d, width, height, x, y };
 }
 
-/** Size a freshly uploaded artwork to ~60% of the zone, keeping its aspect. */
+/** Chest-print sized default so a fresh upload doesn't swamp an all-over zone. */
+const DEFAULT_MAX_IN = { w: 11, h: 14 };
+
+/** Size a freshly uploaded artwork to ~60% of the zone (capped), keeping its aspect. */
 export function initialSize(aspect: number, zoneW: number, zoneH: number) {
-  const maxW = zoneW * 0.62;
-  const maxH = zoneH * 0.62;
+  const maxW = Math.min(zoneW * 0.62, DEFAULT_MAX_IN.w);
+  const maxH = Math.min(zoneH * 0.62, DEFAULT_MAX_IN.h);
   let w = maxW;
   let h = w / aspect;
   if (h > maxH) {
